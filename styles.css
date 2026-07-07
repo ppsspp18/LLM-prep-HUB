@@ -1,0 +1,252 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #eef2f7;
+  margin: 0;
+}
+
+.container {
+  max-width: 950px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+.card,
+.question {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+h1,
+h2 {
+  margin-top: 0;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+  margin: 6px 0 14px;
+}
+
+textarea {
+  height: 220px;
+  resize: vertical;
+}
+
+button {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  margin: 10px 0;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  background: #fff;
+}
+
+.option:hover {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+.option input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.correct-option {
+  background: #dcfce7 !important;
+  border-color: #16a34a !important;
+  color: #166534;
+  font-weight: bold;
+}
+
+.wrong-option {
+  background: #fee2e2 !important;
+  border-color: #dc2626 !important;
+  color: #991b1b;
+  font-weight: bold;
+}
+
+.correct {
+  color: #15803d;
+  font-weight: bold;
+}
+
+.wrong {
+  color: #b91c1c;
+  font-weight: bold;
+}
+
+#result {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 20px 0;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Interview mode */
+.interview-question h3,
+.interview-feedback-card h3 {
+  margin-top: 0;
+  margin-bottom: 14px;
+}
+
+.answer-label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.answer-input {
+  min-height: 150px;
+}
+
+.answer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.mic-btn {
+  background: #0f766e;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.mic-btn:hover {
+  background: #0d9488;
+}
+
+.mic-btn.recording {
+  background: #dc2626;
+}
+
+.mic-btn.recording:hover {
+  background: #b91c1c;
+}
+
+.mic-status {
+  font-size: 14px;
+  color: #475569;
+  font-weight: 600;
+}
+
+.interview-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.feedback-block {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.feedback-heading {
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #1e3a8a;
+}
+
+.answer-preview {
+  white-space: normal;
+  line-height: 1.6;
+}
+
+.feedback-grid {
+  margin-top: 16px;
+}
+
+.feedback-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  font-weight: bold;
+}
+
+.pill-label {
+  color: #1d4ed8;
+}
+
+.pill-value {
+  color: #111827;
+}
+
+.overall-feedback-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  font-size: 16px;
+}
+
+.overall-feedback-card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #1e3a8a;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 14px;
+  }
+
+  .card,
+  .question {
+    padding: 16px;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  .interview-actions {
+    flex-direction: column;
+  }
+
+  .answer-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mic-status {
+    text-align: left;
+  }
+}

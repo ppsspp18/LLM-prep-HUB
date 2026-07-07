@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Quiz Generator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>LLM Quiz Generator</h1>
+
+      <label for="mode">Mode</label>
+      <select id="mode">
+        <option value="mcq">MCQ Quiz</option>
+        <option value="interview">Interview Q&A</option>
+      </select>
+
+      <label for="topic">Topic</label>
+      <input id="topic" placeholder="Machine Learning">
+
+      <label for="concept">Concept</label>
+      <input id="concept" placeholder="Linear Regression">
+
+      <label for="difficulty">Difficulty</label>
+      <select id="difficulty">
+        <option>Easy</option>
+        <option>Medium</option>
+        <option>Hard</option>
+      </select>
+
+      <button id="copyPromptBtn">📋 Copy Prompt</button>
+    </div>
+
+    <div class="card">
+      <h2 id="jsonSectionTitle">Paste JSON Response</h2>
+      <textarea id="jsonInput" placeholder="Paste AI JSON here..."></textarea><br>
+      <button id="generateQuizBtn">Generate</button>
+    </div>
+
+    <div id="quiz"></div>
+    <div id="submitArea"></div>
+
+    <div id="feedbackJsonCard" class="card hidden">
+      <h2>Paste Interview Feedback JSON</h2>
+      <textarea id="feedbackJsonInput" placeholder="Paste AI feedback JSON here..."></textarea><br>
+      <button id="showFeedbackBtn">Show Interview Feedback</button>
+    </div>
+
+    <div id="result"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
