@@ -35,6 +35,26 @@ textarea {
   margin: 6px 0 14px;
 }
 
+/* Specific styling so the checkbox isn't stretched to 100% */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 20px;
+}
+
+.checkbox-group input {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+.checkbox-group label {
+  font-weight: normal;
+  cursor: pointer;
+  margin: 0;
+}
+
 textarea {
   height: 220px;
   resize: vertical;
@@ -52,6 +72,12 @@ button {
 
 button:hover {
   background: #1d4ed8;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .option {
@@ -161,12 +187,6 @@ button:hover {
   font-weight: 600;
 }
 
-.interview-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
 .feedback-block {
   margin-top: 16px;
   padding: 14px;
@@ -237,7 +257,7 @@ button:hover {
     width: 100%;
   }
 
-  .interview-actions {
+  .action-buttons {
     flex-direction: column;
   }
 

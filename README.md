@@ -1,3 +1,10 @@
+Here is the complete, updated `README.md` file reflecting the newest features you added to the project, specifically the customizable question count, the 80/20 Rule (Pareto Principle) toggle, and the Knowledge Gap prompt generator.
+
+I've integrated these additions into the Features, Workflows, and Technical Working sections to keep the documentation accurate and comprehensive.
+
+--- FILE: README.md ---
+
+```markdown
 # LLM Quiz Generator
 
 A lightweight HTML, CSS, and JavaScript application that converts AI-generated JSON into interactive quizzes or interview practice sessions.
@@ -15,18 +22,23 @@ The application itself does **not** call any LLM API. Instead, it generates prom
 ## MCQ Quiz Mode
 
 - Generate an LLM prompt for quiz creation.
+- **Customizable Question Count:** Choose exactly how many questions to generate (1-50).
+- **80/20 Rule (Pareto Principle):** Toggle an option to focus the AI strictly on the most common, high-yield, and fundamental questions for a topic.
 - Paste AI-generated JSON.
-- Automatically render 10 multiple-choice questions.
+- Automatically render multiple-choice questions.
 - Submit answers.
 - Instant scoring.
 - Highlight correct and incorrect answers.
 - Display final score.
+- **Knowledge Gap Resolution:** Automatically generate a personalized prompt after submission containing your correct and incorrect answers, allowing the LLM to explain your mistakes and fill in conceptual gaps.
 
 ---
 
 ## Interview Mode
 
 - Generate an interview-question prompt.
+- **Customizable Question Count:** Choose how many questions to generate.
+- **80/20 Rule (Pareto Principle):** Focus questions on the most frequently asked industry interview topics.
 - Paste interview-question JSON.
 - Answer questions using:
   - Keyboard
@@ -51,13 +63,14 @@ No frameworks or external libraries are required.
 
 # Project Structure
 
-```
+```text
 Quiz Generator HTML/
 │
 ├── index.html
 ├── styles.css
 ├── script.js
 └── README.md
+
 ```
 
 ---
@@ -66,29 +79,32 @@ Quiz Generator HTML/
 
 The application has two independent workflows.
 
-```
+```text
              User
                │
                ▼
        Select Mode
                │
-      ┌────────┴────────┐
-      │                 │
-      ▼                 ▼
-   MCQ Mode       Interview Mode
+       ┌────────┴────────┐
+       │                 │
+       ▼                 ▼
+   MCQ Mode        Interview Mode
+
 ```
 
 ---
 
 # MCQ Workflow
 
-```
+```text
 User
  │
  ▼
 Enter Topic
 Enter Concept
 Select Difficulty
+Set Number of Questions
+Toggle 80/20 Rule
  │
  ▼
 Copy Prompt
@@ -115,23 +131,29 @@ User Answers Questions
 Submit Quiz
  │
  ▼
-Score Calculation
+Score Calculation & Display Results
  │
  ▼
-Display Results
+Copy Knowledge Gap Prompt (Optional)
+ │
+ ▼
+Paste into ChatGPT for Explanations
+
 ```
 
 ---
 
 # Interview Workflow
 
-```
+```text
 User
  │
  ▼
 Enter Topic
 Enter Concept
 Difficulty
+Set Number of Questions
+Toggle 80/20 Rule
  │
  ▼
 Copy Interview Prompt
@@ -168,6 +190,7 @@ Paste Feedback JSON
  │
  ▼
 Render Interview Evaluation
+
 ```
 
 ---
@@ -178,19 +201,22 @@ Render Interview Evaluation
 
 When the **Copy Prompt** button is pressed, JavaScript reads:
 
-- Topic
-- Concept
-- Difficulty
-- Selected Mode
+* Topic
+* Concept
+* Difficulty
+* Number of Questions
+* 80/20 Rule Status
+* Selected Mode
 
-Depending on the selected mode, it dynamically generates a prompt instructing an LLM to return JSON in a predefined structure.
+Depending on the selected mode and settings, it dynamically generates a prompt instructing an LLM to return JSON in a predefined structure. If the 80/20 rule is checked, it appends a strict rule for the LLM to focus only on the most high-yield concepts.
 
 The prompt is copied to the clipboard using the Clipboard API.
 
 Example:
 
-```
+```javascript
 navigator.clipboard.writeText(prompt);
+
 ```
 
 ---
@@ -199,14 +225,15 @@ navigator.clipboard.writeText(prompt);
 
 After the AI response is pasted, the application parses it using:
 
-```
+```javascript
 JSON.parse(jsonInput.value)
+
 ```
 
 If parsing fails:
 
-- Invalid JSON alert is shown.
-- Rendering stops.
+* Invalid JSON alert is shown.
+* Rendering stops.
 
 This guarantees that only valid JSON is processed.
 
@@ -220,7 +247,7 @@ Instead, JavaScript loops through every question inside the JSON object and gene
 
 Example flow:
 
-```
+```text
 questions[]
       │
       ▼
@@ -231,55 +258,30 @@ Create HTML
       │
       ▼
 Insert into DOM
+
 ```
 
 The rendered HTML includes:
 
-- Question number
-- Question text
-- Options (MCQ mode)
-- Answer textarea (Interview mode)
+* Question number
+* Question text
+* Options (MCQ mode)
+* Answer textarea (Interview mode)
 
 ---
 
-## 4. MCQ Evaluation
+## 4. MCQ Evaluation & Knowledge Gaps
 
 Each radio button stores its selected option.
 
 When **Submit Quiz** is pressed:
 
-- Every selected answer is compared with:
+* Every selected answer is compared with `correctOption` inside the JSON.
+* Score is incremented for correct answers, and the UI highlights correct/wrong choices.
+* Final Score is displayed.
 
-```
-correctOption
-```
-
-inside the JSON.
-
-Results are calculated as:
-
-```
-Selected Answer
-        │
-        ▼
-Compare
-        │
-        ▼
-correctOption
-        │
- ┌──────┴──────┐
- │             │
-Correct      Wrong
- │             │
- ▼             ▼
-Score++   Highlight Correct Answer
-```
-
-Finally:
-
-```
-Final Score = Correct Answers / Total Questions
-```
+**Knowledge Gap Generation:**
+After submission, a "Copy Response for Knowledge Gap" button becomes available. The application compiles an array of the user's specific answers versus the correct answers and generates a prompt. When pasted into an LLM, the LLM acts as a tutor to explain the specific concepts the user got wrong or skipped.
 
 ---
 
@@ -289,24 +291,26 @@ Every interview textarea has a unique ID.
 
 Example:
 
-```
+```html
 answer-0
 answer-1
 answer-2
+
 ```
 
 When generating the feedback prompt, JavaScript collects all answers into an array.
 
 Example structure:
 
-```
+```json
 [
   {
-    "questionNo":1,
-    "question":"...",
-    "answer":"..."
+    "questionNo": 1,
+    "question": "...",
+    "answer": "..."
   }
 ]
+
 ```
 
 This array is embedded directly into the prompt for the LLM.
@@ -317,21 +321,23 @@ This array is embedded directly into the prompt for the LLM.
 
 Interview mode supports voice input using the browser's Web Speech API.
 
-```
+```javascript
 SpeechRecognition
+
 ```
 
 or
 
-```
+```javascript
 webkitSpeechRecognition
+
 ```
 
 depending on browser support.
 
 Flow:
 
-```
+```text
 Start Speaking
       │
       ▼
@@ -345,16 +351,17 @@ Live Transcript
       │
       ▼
 Textarea Updates
+
 ```
 
 Features:
 
-- Continuous recognition
-- Interim results
-- Final transcript
-- Microphone status
-- Error handling
-- Permission handling
+* Continuous recognition
+* Interim results
+* Final transcript
+* Microphone status
+* Error handling
+* Permission handling
 
 Only one microphone session can be active at a time.
 
@@ -366,12 +373,12 @@ The AI-generated interview feedback is expected in JSON format.
 
 The application renders:
 
-- User Answer
-- Score
-- Feedback
-- Strengths
-- Improvements
-- Ideal Answer
+* User Answer
+* Score
+* Feedback
+* Strengths
+* Improvements
+* Ideal Answer
 
 Every section is displayed inside a styled feedback card.
 
@@ -398,6 +405,7 @@ Every section is displayed inside a styled feedback card.
     }
   ]
 }
+
 ```
 
 ---
@@ -414,6 +422,7 @@ Every section is displayed inside a styled feedback card.
     }
   ]
 }
+
 ```
 
 ---
@@ -437,6 +446,7 @@ Every section is displayed inside a styled feedback card.
     }
   ]
 }
+
 ```
 
 ---
@@ -444,7 +454,7 @@ Every section is displayed inside a styled feedback card.
 # Browser Compatibility
 
 | Feature | Supported Browsers |
-|----------|-------------------|
+| --- | --- |
 | HTML/CSS | All Modern Browsers |
 | Clipboard API | Chrome, Edge, Firefox, Safari |
 | Speech Recognition | Chrome, Edge |
@@ -460,14 +470,14 @@ The application validates user input and AI responses to avoid runtime errors.
 
 Handled cases include:
 
-- Invalid JSON
-- Incorrect JSON structure
-- Missing questions
-- Missing options
-- Missing microphone
-- Microphone permission denied
-- No speech detected
-- Unsupported browser
+* Invalid JSON
+* Incorrect JSON structure
+* Missing questions
+* Missing options
+* Missing microphone
+* Microphone permission denied
+* No speech detected
+* Unsupported browser
 
 ---
 
@@ -477,11 +487,11 @@ To reduce the risk of HTML injection, all user-provided and AI-generated text is
 
 The application converts special characters such as:
 
-- `<`
-- `>`
-- `&`
-- `'`
-- `"`
+* `<`
+* `>`
+* `&`
+* `'`
+* `"`
 
 into their corresponding HTML entities before rendering.
 
@@ -491,19 +501,24 @@ into their corresponding HTML entities before rendering.
 
 Possible enhancements include:
 
-- Direct integration with OpenAI or other LLM APIs
-- Export quiz results as PDF
-- Timer-based quizzes
-- Negative marking
-- Question randomization
-- Progress indicator
-- Local storage for quiz history
-- Dark mode
-- Authentication and user profiles
-- Result analytics and charts
+* Direct integration with OpenAI or other LLM APIs
+* Export quiz results as PDF
+* Timer-based quizzes
+* Negative marking
+* Question randomization
+* Progress indicator
+* Local storage for quiz history
+* Dark mode
+* Authentication and user profiles
+* Result analytics and charts
 
 ---
 
 # License
 
 This project is intended for educational and learning purposes. You are free to modify and extend it according to your requirements.
+
+```
+--- END FILE ---
+
+```

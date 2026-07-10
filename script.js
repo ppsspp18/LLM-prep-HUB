@@ -17,6 +17,9 @@ const modeSelect = document.getElementById("mode");
 const topicInput = document.getElementById("topic");
 const conceptInput = document.getElementById("concept");
 const difficultySelect = document.getElementById("difficulty");
+const numQuestionsInput = document.getElementById("numQuestions");
+const paretoRuleCheckbox = document.getElementById("paretoRule");
+
 const jsonInput = document.getElementById("jsonInput");
 const quizContainer = document.getElementById("quiz");
 const submitArea = document.getElementById("submitArea");
@@ -67,13 +70,28 @@ function copyPrompt() {
   const t = topicInput.value.trim();
   const c = conceptInput.value.trim();
   const d = difficultySelect.value;
+  const num = numQuestionsInput.value || 10;
+  const usePareto = paretoRuleCheckbox.checked;
 
   let prompt = "";
 
   if (mode === "mcq") {
+    let rules = `1. Return ONLY valid JSON.
+2. Do not include markdown.
+3. Do not include explanations.
+4. Every question must have exactly four options.
+5. Exactly one option must be correct.
+6. correctOption must be an integer from 1 to 4.
+7. Make questions unique.
+8. Use simple English.`;
+
+    if (usePareto) {
+      rules += `\n9. Apply the 80/20 rule (Pareto principle): focus exclusively on the most frequently asked, fundamental, and high-yield questions for this topic.`;
+    }
+
     prompt = `You are an expert quiz generator.
 
-Generate exactly 10 multiple-choice questions.
+Generate exactly ${num} multiple-choice questions.
 
 Topic:
 ${t}
@@ -85,14 +103,7 @@ Difficulty:
 ${d}
 
 Rules:
-1. Return ONLY valid JSON.
-2. Do not include markdown.
-3. Do not include explanations.
-4. Every question must have exactly four options.
-5. Exactly one option must be correct.
-6. correctOption must be an integer from 1 to 4.
-7. Make questions unique.
-8. Use simple English.
+${rules}
 
 Return:
 {
@@ -107,9 +118,21 @@ Return:
   ]
 }`;
   } else {
+    let rules = `1. Return ONLY valid JSON.
+2. Do not include markdown.
+3. Do not include explanations.
+4. Questions must be open-ended interview questions, not MCQs.
+5. Questions should test conceptual understanding, practical thinking, and problem-solving.
+6. Use simple English.
+7. Make all questions unique.`;
+
+    if (usePareto) {
+      rules += `\n8. Apply the 80/20 rule (Pareto principle): focus exclusively on the most frequently asked, fundamental, and high-yield questions for this topic.`;
+    }
+
     prompt = `You are an expert interview question generator.
 
-Generate exactly 10 interview-style questions.
+Generate exactly ${num} interview-style questions.
 
 Topic:
 ${t}
@@ -121,13 +144,7 @@ Difficulty:
 ${d}
 
 Rules:
-1. Return ONLY valid JSON.
-2. Do not include markdown.
-3. Do not include explanations.
-4. Questions must be open-ended interview questions, not MCQs.
-5. Questions should test conceptual understanding, practical thinking, and problem-solving.
-6. Use simple English.
-7. Make all questions unique.
+${rules}
 
 Return:
 {
@@ -251,9 +268,44 @@ function submitQuiz() {
   });
 
   result.innerHTML = `🎯 Final Score: ${score} / ${quizData.questions.length}`;
-  submitArea.innerHTML = `<button id="reloadQuizBtn">Load New Quiz</button>`;
+  submitArea.innerHTML = `
+    <div class="action-buttons">
+      <button id="copyKnowledgeGapBtn">📋 Copy Response for Knowledge Gap</button>
+      <button id="reloadQuizBtn">Load New Quiz</button>
+    </div>
+  `;
 
+  document.getElementById("copyKnowledgeGapBtn").addEventListener("click", copyKnowledgeGapPrompt);
   document.getElementById("reloadQuizBtn").addEventListener("click", resetApp);
+}
+
+function copyKnowledgeGapPrompt() {
+  if (!quizData || !Array.isArray(quizData.questions)) return;
+
+  const t = topicInput.value.trim() || "the topic";
+  const c = conceptInput.value.trim() || "the core concepts";
+  
+  let resultsText = `I just took a multiple-choice quiz on ${t} - ${c}. Here are my results:\n\n`;
+
+  quizData.questions.forEach((q, i) => {
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    let userAnswer = "Not Attempted";
+    
+    if (selected) {
+      const selectedValue = Number(selected.value);
+      userAnswer = q.options[selectedValue - 1];
+    }
+    const correctAnswer = q.options[q.correctOption - 1];
+
+    resultsText += `Q${q.questionNo}: ${q.question}\n`;
+    resultsText += `My Answer: ${userAnswer}\n`;
+    resultsText += `Correct Answer: ${correctAnswer}\n\n`;
+  });
+
+  resultsText += `Based on these results, please act as an expert tutor. Provide an explanation of the chapter to fill my knowledge gaps. Focus especially on explaining the concepts behind the questions I got wrong or did not attempt.`;
+
+  navigator.clipboard.writeText(resultsText);
+  alert("Knowledge gap prompt copied! Paste this into the LLM to get an explanation of your mistakes.");
 }
 
 /* =========================
@@ -310,7 +362,7 @@ function loadInterviewQuestions() {
   bindMicButtons();
 
   submitArea.innerHTML = `
-    <div class="interview-actions">
+    <div class="action-buttons">
       <button id="copyInterviewFeedbackPromptBtn">📋 Copy Feedback Prompt</button>
     </div>
   `;
