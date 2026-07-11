@@ -18,6 +18,7 @@ const topicInput = document.getElementById("topic");
 const conceptInput = document.getElementById("concept");
 const difficultySelect = document.getElementById("difficulty");
 const numQuestionsInput = document.getElementById("numQuestions");
+const additionalDescriptionInput = document.getElementById("additionalDescription");
 const paretoRuleCheckbox = document.getElementById("paretoRule");
 
 const jsonInput = document.getElementById("jsonInput");
@@ -72,6 +73,7 @@ function copyPrompt() {
   const d = difficultySelect.value;
   const num = numQuestionsInput.value || 10;
   const usePareto = paretoRuleCheckbox.checked;
+  const additionalDescription = additionalDescriptionInput.value.trim();
 
   let prompt = "";
 
@@ -83,10 +85,11 @@ function copyPrompt() {
 5. Exactly one option must be correct.
 6. correctOption must be an integer from 1 to 4.
 7. Make questions unique.
-8. Use simple English.`;
+8. Use simple English.
+9. If a question or option includes code or multi-line content, keep it inside the JSON string using \\n escape sequences (do not break the JSON with literal line breaks).`;
 
     if (usePareto) {
-      rules += `\n9. Apply the 80/20 rule (Pareto principle): focus exclusively on the most frequently asked, fundamental, and high-yield questions for this topic.`;
+      rules += `\n10. Apply the 80/20 rule (Pareto principle): focus exclusively on the most frequently asked, fundamental, and high-yield questions for this topic.`;
     }
 
     prompt = `You are an expert quiz generator.
@@ -100,7 +103,13 @@ Concept:
 ${c}
 
 Difficulty:
-${d}
+${d}`;
+
+    if (additionalDescription) {
+      prompt += `\n\nAdditional Instructions:\n${additionalDescription}`;
+    }
+
+    prompt += `
 
 Rules:
 ${rules}
@@ -124,10 +133,11 @@ Return:
 4. Questions must be open-ended interview questions, not MCQs.
 5. Questions should test conceptual understanding, practical thinking, and problem-solving.
 6. Use simple English.
-7. Make all questions unique.`;
+7. Make all questions unique.
+8. If a question includes code or multi-line content, keep it inside the JSON string using \\n escape sequences (do not break the JSON with literal line breaks).`;
 
     if (usePareto) {
-      rules += `\n8. Apply the 80/20 rule (Pareto principle): focus exclusively on the most frequently asked, fundamental, and high-yield questions for this topic.`;
+      rules += `\n9. Apply the 80/20 rule (Pareto principle): focus exclusively on the most frequently asked, fundamental, and high-yield questions for this topic.`;
     }
 
     prompt = `You are an expert interview question generator.
@@ -141,7 +151,13 @@ Concept:
 ${c}
 
 Difficulty:
-${d}
+${d}`;
+
+    if (additionalDescription) {
+      prompt += `\n\nAdditional Instructions:\n${additionalDescription}`;
+    }
+
+    prompt += `
 
 Rules:
 ${rules}
@@ -194,7 +210,9 @@ function loadQuiz() {
   quizContainer.innerHTML = `<h2>${escapeHtml(quizData.title || "Quiz")}</h2>`;
 
   quizData.questions.forEach((q, i) => {
-    let html = `<div class="question"><h3>${q.questionNo}. ${escapeHtml(q.question)}</h3>`;
+    let html = `<div class="question">
+      <h3>Question ${q.questionNo}</h3>
+      <div class="question-text">${escapeHtml(q.question)}</div>`;
 
     if (!Array.isArray(q.options)) {
       html += `<p class="wrong">Invalid options data.</p></div>`;
@@ -206,7 +224,7 @@ function loadQuiz() {
       html += `
         <label class="option">
           <input type="radio" name="q${i}" value="${j + 1}">
-          <span><b>${String.fromCharCode(65 + j)}.</b> ${escapeHtml(option)}</span>
+          <span class="option-content"><b>${String.fromCharCode(65 + j)}.</b> <span class="option-text">${escapeHtml(option)}</span></span>
         </label>
       `;
     });
@@ -284,28 +302,55 @@ function copyKnowledgeGapPrompt() {
 
   const t = topicInput.value.trim() || "the topic";
   const c = conceptInput.value.trim() || "the core concepts";
-  
-  let resultsText = `I just took a multiple-choice quiz on ${t} - ${c}. Here are my results:\n\n`;
+
+  const missedQuestions = [];
 
   quizData.questions.forEach((q, i) => {
     const selected = document.querySelector(`input[name="q${i}"]:checked`);
     let userAnswer = "Not Attempted";
-    
+    let wasCorrect = false;
+
     if (selected) {
       const selectedValue = Number(selected.value);
       userAnswer = q.options[selectedValue - 1];
+      wasCorrect = selectedValue === q.correctOption;
     }
-    const correctAnswer = q.options[q.correctOption - 1];
 
-    resultsText += `Q${q.questionNo}: ${q.question}\n`;
-    resultsText += `My Answer: ${userAnswer}\n`;
-    resultsText += `Correct Answer: ${correctAnswer}\n\n`;
+    if (!wasCorrect) {
+      missedQuestions.push({
+        questionNo: q.questionNo,
+        question: q.question,
+        userAnswer,
+        correctAnswer: q.options[q.correctOption - 1]
+      });
+    }
   });
 
-  resultsText += `Based on these results, please act as an expert tutor. Provide an explanation of the chapter to fill my knowledge gaps. Focus especially on explaining the concepts behind the questions I got wrong or did not attempt.`;
+  if (missedQuestions.length === 0) {
+    const prompt = `I just took a multiple-choice quiz on ${t} - ${c} and answered every question correctly. Please give me a short, encouraging summary of the key concepts this quiz covered, and suggest 2-3 slightly more advanced or related topics I could explore next to deepen my understanding.`;
+    navigator.clipboard.writeText(prompt);
+    alert("Prompt copied! (You got a perfect score, so this asks for next-step topics instead.)");
+    return;
+  }
+
+  let resultsText = `I just took a multiple-choice quiz on ${t} - ${c}. Below are ONLY the questions I got wrong or did not attempt, out of ${quizData.questions.length} total questions.\n\n`;
+
+  missedQuestions.forEach((item) => {
+    resultsText += `Q${item.questionNo}: ${item.question}\n`;
+    resultsText += `My Answer: ${item.userAnswer}\n`;
+    resultsText += `Correct Answer: ${item.correctAnswer}\n\n`;
+  });
+
+  resultsText += `Based on these mistakes, please act as an expert tutor and help me close my knowledge gaps. For each question above:
+1. Explain the underlying theory/concept in simple, clear terms.
+2. Explain specifically why my answer was wrong (if I attempted it) and why the correct answer is right.
+3. Walk through any relevant code or logic step by step where applicable.
+4. Point out common misconceptions that lead to this kind of mistake.
+
+Then, at the end, give a short summary of the overall concepts I should review to master this topic.`;
 
   navigator.clipboard.writeText(resultsText);
-  alert("Knowledge gap prompt copied! Paste this into the LLM to get an explanation of your mistakes.");
+  alert("Knowledge gap prompt copied! Paste this into the LLM to get an explanation focused on your mistakes.");
 }
 
 /* =========================
@@ -336,7 +381,8 @@ function loadInterviewQuestions() {
   interviewData.questions.forEach((q, i) => {
     quizContainer.innerHTML += `
       <div class="question interview-question">
-        <h3>${q.questionNo}. ${escapeHtml(q.question)}</h3>
+        <h3>Question ${q.questionNo}</h3>
+        <div class="question-text">${escapeHtml(q.question)}</div>
         <label for="answer-${i}" class="answer-label">Your Answer</label>
 
         <div class="answer-toolbar">
@@ -571,7 +617,8 @@ function renderInterviewFeedback() {
   interviewFeedbackData.results.forEach((item) => {
     quizContainer.innerHTML += `
       <div class="question interview-feedback-card">
-        <h3>${item.questionNo}. ${escapeHtml(item.question || "")}</h3>
+        <h3>Question ${item.questionNo}</h3>
+        <div class="question-text">${escapeHtml(item.question || "")}</div>
 
         <div class="feedback-block">
           <div class="feedback-heading">Your Answer</div>
