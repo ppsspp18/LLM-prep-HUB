@@ -3,68 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
   <title>LLM Quiz Generator</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <div class="card">
-      <h1>LLM Quiz Generator</h1>
-
-      <label for="mode">Mode</label>
-      <select id="mode">
-        <option value="mcq">MCQ Quiz</option>
-        <option value="interview">Interview Q&A</option>
-      </select>
-
-      <label for="topic">Topic</label>
-      <input id="topic" placeholder="Machine Learning">
-
-      <label for="concept">Concept</label>
-      <input id="concept" placeholder="Linear Regression">
-
-      <label for="difficulty">Difficulty</label>
-      <select id="difficulty">
-        <option>Easy</option>
-        <option>Medium</option>
-        <option>Hard</option>
-      </select>
-
-      <label for="numQuestions">Number of Questions</label>
-      <input type="number" id="numQuestions" value="10" min="1" max="50">
-
-      <label for="additionalDescription">Additional Description (optional)</label>
-      <textarea id="additionalDescription" placeholder="Any extra instructions or context for the question generator (e.g. focus areas, exclusions, style preferences)..."></textarea>
-
-      <div class="checkbox-group">
-        <input type="checkbox" id="paretoRule">
-        <label for="paretoRule">Apply 80/20 Rule (Focus on most common/core concepts)</label>
+  <div class="home-container">
+    <div class="card home-card">
+      <h1>LLM Quiz & Interview Hub</h1>
+      <p style="color: var(--text-secondary); margin-top: 8px;">Select a mode to generate AI-powered learning modules and technical assessments.</p>
+      
+      <div class="mode-grid">
+        <a href="quiz/quiz.html" class="mode-card">
+          <span class="mode-icon">📝</span>
+          <span class="mode-title">Quiz Mode</span>
+          <span style="font-size: 13px; color: var(--text-secondary);">Multiple-choice tests & knowledge gaps</span>
+        </a>
+        
+        <a href="interview/interview.html" class="mode-card">
+          <span class="mode-icon">🎤</span>
+          <span class="mode-title">Interview Mode</span>
+          <span style="font-size: 13px; color: var(--text-secondary);">Open-ended Q&A with voice & AI feedback</span>
+        </a>
       </div>
-
-      <button id="copyPromptBtn">📋 Copy Prompt</button>
     </div>
-
-    <div class="card">
-      <h2 id="jsonSectionTitle">Paste JSON Response</h2>
-      <textarea id="jsonInput" placeholder="Paste AI JSON here..."></textarea><br>
-      <button id="generateQuizBtn">Generate</button>
-    </div>
-
-    <div id="quiz"></div>
-    <div id="submitArea"></div>
-
-    <div id="feedbackJsonCard" class="card hidden">
-      <h2>Paste Interview Feedback JSON</h2>
-      <textarea id="feedbackJsonInput" placeholder="Paste AI feedback JSON here..."></textarea><br>
-      <button id="showFeedbackBtn">Show Interview Feedback</button>
-    </div>
-
-    <div id="result"></div>
   </div>
-
-  <script src="script.js"></script>
 </body>
 </html>

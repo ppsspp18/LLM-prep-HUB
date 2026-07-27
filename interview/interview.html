@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>LLM Quiz Generator - Interview Mode</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <div class="top-nav">
+    <a href="../index.html" class="back-btn-top">← Back to Home</a>
+    <button id="helpBtn" class="help-btn-top">❓ How to Use</button>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h1>LLM Interview Generator</h1>
+      
+      <div class="topic-concept-grid">
+        <div class="input-group-aesthetic">
+          <label for="topic"><span>📚</span> Topic</label>
+          <div class="input-with-icon">
+            <span class="input-icon">🔍</span>
+            <input id="topic" placeholder="e.g. Machine Learning">
+          </div>
+          <div class="suggestion-chips">
+            <button type="button" class="chip" onclick="setTopic('Machine Learning')">Machine Learning</button>
+            <button type="button" class="chip" onclick="setTopic('System Design')">System Design</button>
+            <button type="button" class="chip" onclick="setTopic('Web Development')">Web Dev</button>
+          </div>
+        </div>
+
+        <div class="input-group-aesthetic">
+          <label for="concept"><span>💡</span> Concept</label>
+          <div class="input-with-icon">
+            <span class="input-icon">🎯</span>
+            <input id="concept" placeholder="e.g. Linear Regression">
+          </div>
+          <div class="suggestion-chips">
+            <button type="button" class="chip" onclick="setConcept('Linear Regression')">Linear Regression</button>
+            <button type="button" class="chip" onclick="setConcept('Microservices')">Microservices</button>
+            <button type="button" class="chip" onclick="setConcept('React Hooks')">React Hooks</button>
+          </div>
+        </div>
+      </div>
+      
+      <label for="difficulty">Difficulty</label>
+      <select id="difficulty">
+        <option>Easy</option>
+        <option>Medium</option>
+        <option>Hard</option>
+      </select>
+      
+      <label for="numQuestions">Number of Questions</label>
+      <input type="number" id="numQuestions" value="10" min="1" max="50">
+      
+      <label for="additionalDescription">Additional Description (optional)</label>
+      <textarea id="additionalDescription" placeholder="Any extra instructions or context for the question generator (e.g. focus areas, exclusions, style preferences)..."></textarea>
+      
+      <div class="checkbox-group">
+        <input type="checkbox" id="paretoRule">
+        <label for="paretoRule">Apply 80/20 Rule (Focus on most common/core concepts)</label>
+      </div>
+      
+      <button id="copyPromptBtn">📋 Copy Prompt</button>
+    </div>
+
+    <div class="card">
+      <h2 id="jsonSectionTitle">Paste Interview Questions JSON</h2>
+      <textarea id="jsonInput" placeholder="Paste interview questions JSON here..."></textarea><br>
+      <button id="generateQuizBtn">Generate Interview Questions</button>
+    </div>
+
+    <div id="quiz"></div>
+    <div id="submitArea"></div>
+    <div id="result"></div>
+    
+    <div id="feedbackJsonCard" class="card hidden">
+      <h2>Paste Interview Feedback JSON</h2>
+      <textarea id="feedbackJsonInput" placeholder="Paste AI feedback JSON here..."></textarea><br>
+      <button id="showFeedbackBtn">Show Interview Feedback</button>
+    </div>
+  </div>
+
+  <div id="helpModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>How to Use Interview Mode</h2>
+        <button id="closeModalBtn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <ol>
+          <li>Fill in your desired <strong>Topic</strong>, <strong>Concept</strong>, <strong>Difficulty</strong>, and number of questions.</li>
+          <li>Click <strong>📋 Copy Prompt</strong> and paste it into any LLM to generate interview questions JSON.</li>
+          <li>Paste the resulting JSON into the box below and click <strong>Generate Interview Questions</strong>.</li>
+          <li>Write your answers to each open-ended question.</li>
+          <li>Click <strong>📋 Copy Feedback Prompt</strong>, paste it into the LLM to grade your answers, then paste the returned feedback JSON to view detailed AI scores and feedback.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <script src="interview.js"></script>
+</body>
+</html>

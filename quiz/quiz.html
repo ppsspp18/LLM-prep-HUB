@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>LLM Quiz Generator - Quiz Mode</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <div class="top-nav">
+    <a href="../index.html" class="back-btn-top">← Back to Home</a>
+    <button id="helpBtn" class="help-btn-top">❓ How to Use</button>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h1>LLM Quiz Generator</h1>
+      
+      <div class="topic-concept-grid">
+        <div class="input-group-aesthetic">
+          <label for="topic"><span>📚</span> Topic</label>
+          <div class="input-with-icon">
+            <span class="input-icon">🔍</span>
+            <input id="topic" placeholder="e.g. Machine Learning">
+          </div>
+          <div class="suggestion-chips">
+            <button type="button" class="chip" onclick="setTopic('Machine Learning')">Machine Learning</button>
+            <button type="button" class="chip" onclick="setTopic('System Design')">System Design</button>
+            <button type="button" class="chip" onclick="setTopic('Web Development')">Web Dev</button>
+          </div>
+        </div>
+
+        <div class="input-group-aesthetic">
+          <label for="concept"><span>💡</span> Concept</label>
+          <div class="input-with-icon">
+            <span class="input-icon">🎯</span>
+            <input id="concept" placeholder="e.g. Linear Regression">
+          </div>
+          <div class="suggestion-chips">
+            <button type="button" class="chip" onclick="setConcept('Linear Regression')">Linear Regression</button>
+            <button type="button" class="chip" onclick="setConcept('Microservices')">Microservices</button>
+            <button type="button" class="chip" onclick="setConcept('React Hooks')">React Hooks</button>
+          </div>
+        </div>
+      </div>
+      
+      <label for="difficulty">Difficulty</label>
+      <select id="difficulty">
+        <option>Easy</option>
+        <option>Medium</option>
+        <option>Hard</option>
+      </select>
+      
+      <label for="numQuestions">Number of Questions</label>
+      <input type="number" id="numQuestions" value="10" min="1" max="50">
+      
+      <label for="additionalDescription">Additional Description (optional)</label>
+      <textarea id="additionalDescription" placeholder="Any extra instructions or context for the question generator (e.g. focus areas, exclusions, style preferences)..."></textarea>
+      
+      <div class="checkbox-group">
+        <input type="checkbox" id="paretoRule">
+        <label for="paretoRule">Apply 80/20 Rule (Focus on most common/core concepts)</label>
+      </div>
+      
+      <button id="copyPromptBtn">📋 Copy Prompt</button>
+    </div>
+
+    <div class="card">
+      <h2 id="jsonSectionTitle">Paste JSON Response</h2>
+      <textarea id="jsonInput" placeholder="Paste MCQ quiz JSON here..."></textarea><br>
+      <button id="generateQuizBtn">Generate Quiz</button>
+    </div>
+
+    <div id="quiz"></div>
+    <div id="submitArea"></div>
+    <div id="result"></div>
+  </div>
+
+  <div id="helpModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>How to Use Quiz Mode</h2>
+        <button id="closeModalBtn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <ol>
+          <li>Fill in your desired <strong>Topic</strong>, <strong>Concept</strong>, <strong>Difficulty</strong>, and number of questions.</li>
+          <li>Click <strong>📋 Copy Prompt</strong> to copy the AI prompt to your clipboard.</li>
+          <li>Paste the prompt into any LLM (ChatGPT, Claude, etc.) to generate the quiz JSON.</li>
+          <li>Paste the resulting JSON into the <strong>Paste JSON Response</strong> box below.</li>
+          <li>Click <strong>Generate Quiz</strong>, take the test, and click <strong>Submit Quiz</strong> to view your score and explanations.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <script src="quiz.js"></script>
+</body>
+</html>

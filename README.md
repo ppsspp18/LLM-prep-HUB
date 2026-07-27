@@ -11,7 +11,8 @@ A lightweight, static HTML/CSS/JS tool for generating and taking quizzes or inte
 5. Click **Generate** to render the quiz or interview questions.
 6. For MCQ quizzes: answer the questions and click **Submit Quiz** to see your score.
    - Use **📋 Copy Response for Knowledge Gap** to copy a prompt (containing only the questions you got wrong or skipped) back to the LLM for a focused theory explanation of your mistakes.
-7. For Interview mode: type or speak (🎤) your answers, then use **📋 Copy Feedback Prompt** to get AI-graded feedback, and paste the returned JSON to view detailed feedback per question.
+ 7. For Interview mode: type your answers, then use **📋 Copy Feedback Prompt** to get AI-graded feedback, and paste the returned JSON to view detailed feedback per question.
+
 
 ## Features
 
@@ -19,7 +20,6 @@ A lightweight, static HTML/CSS/JS tool for generating and taking quizzes or inte
 - Optional 80/20 (Pareto) rule toggle to focus on high-yield concepts
 - Optional additional description field for custom instructions to the LLM
 - Proper rendering of multi-line questions/options (e.g. code snippets) using `\n` in the JSON
-- Speech-to-text answering for interview mode (Chrome/Edge)
 - Knowledge-gap prompt generation focused only on missed questions, requesting theory explanations
 - Fully responsive UI
 
