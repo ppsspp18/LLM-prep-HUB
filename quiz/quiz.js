@@ -1,4 +1,7 @@
 let quizData;
+let quizSubmitted = false;
+let timerInterval = null;
+let timeLeft = 0;
 
 const topicInput = document.getElementById("topic");
 const conceptInput = document.getElementById("concept");
@@ -13,9 +16,55 @@ const submitArea = document.getElementById("submitArea");
 const result = document.getElementById("result");
 const copyPromptBtn = document.getElementById("copyPromptBtn");
 const generateQuizBtn = document.getElementById("generateQuizBtn");
+const promptTemplateSelect = document.getElementById("promptTemplate");
+const enableTimerCheckbox = document.getElementById("enableTimer");
+const timerMinutesInput = document.getElementById("timerMinutes");
+const timerBar = document.getElementById("timerBar");
+const exportQuizBtn = document.getElementById("exportQuizBtn");
+const importQuizBtn = document.getElementById("importQuizBtn");
+const importFileInput = document.getElementById("importFileInput");
+
+const PROMPT_TEMPLATES = {
+  standard: { label: "Standard", instructions: "" },
+  deepDive: {
+    label: "Deep Dive Technical",
+    instructions: "Focus on advanced technical depth: edge cases, trade-offs, and underlying mechanisms. Prefer questions that separate advanced learners from beginners."
+  },
+  fundamentals: {
+    label: "Conceptual Fundamentals",
+    instructions: "Focus on core concepts, definitions, intuition, and first principles. Prefer questions that establish strong foundational understanding."
+  },
+  codeHeavy: {
+    label: "Code-Heavy",
+    instructions: "Include code snippets, output prediction, bug hunting, and 'what does this code do' style questions. Keep code inside \\n escape sequences in the JSON."
+  },
+  realWorld: {
+    label: "Real-World Scenarios",
+    instructions: "Frame questions as realistic, practical scenarios or case studies that apply the concept to real production situations."
+  },
+  rapidFire: {
+    label: "Rapid Fire",
+    instructions: "Keep questions short, punchy, and quick to answer. Favor one-liner questions that test recall and speed."
+  },
+  tricky: {
+    label: "Tricky / Common Mistakes",
+    instructions: "Include tricky questions and common misconceptions. Prefer distractors that reflect typical mistakes learners make."
+  },
+  systemDesign: {
+    label: "System Design",
+    instructions: "Focus on architecture, scalability, reliability, and trade-offs. Prefer questions about designing systems or choosing between architectural approaches."
+  }
+};
 
 copyPromptBtn.addEventListener("click", copyPrompt);
 generateQuizBtn.addEventListener("click", handleGenerate);
+exportQuizBtn.addEventListener("click", exportQuiz);
+importQuizBtn.addEventListener("click", () => importFileInput.click());
+importFileInput.addEventListener("change", handleImportFile);
+enableTimerCheckbox.addEventListener("change", () => {
+  timerMinutesInput.disabled = !enableTimerCheckbox.checked;
+});
+timerMinutesInput.disabled = true;
 
 const helpBtn = document.getElementById("helpBtn");
 const helpModal = document.getElementById("helpModal");
@@ -84,6 +133,11 @@ ${d}`;
     prompt += `\n\nAdditional Instructions:\n${additionalDescription}`;
   }
 
+  const template = PROMPT_TEMPLATES[promptTemplateSelect.value] || PROMPT_TEMPLATES.standard;
+  if (template.instructions) {
+    prompt += `\n\nPrompt Template (${template.label}):\n${template.instructions}`;
+  }
+
   prompt += `
 
 Rules:
@@ -123,6 +177,14 @@ function loadQuiz() {
     return;
   }
 
+  quizSubmitted = false;
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  timerBar.classList.add("hidden");
+  timerBar.classList.remove("timer-warning");
+
   result.innerHTML = "";
   quizContainer.innerHTML = `<h2>${escapeHtml(quizData.title || "Quiz")}</h2>`;
 
@@ -152,9 +214,21 @@ function loadQuiz() {
 
   submitArea.innerHTML = `<button id="submitQuizBtn">Submit Quiz</button>`;
   document.getElementById("submitQuizBtn").addEventListener("click", submitQuiz);
+
+  if (enableTimerCheckbox.checked) {
+    startTimer();
+  }
 }
 
 function submitQuiz() {
+  if (quizSubmitted) return;
+  quizSubmitted = true;
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  timerBar.classList.add("hidden");
+
   let score = 0;
 
   document.querySelectorAll(".question").forEach((div, i) => {
@@ -202,15 +276,25 @@ function submitQuiz() {
     });
   });
 
+  const correctQuestions = [];
+  quizData.questions.forEach((q, i) => {
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    if (selected && Number(selected.value) === q.correctOption) {
+      correctQuestions.push(q);
+    }
+  });
+
   result.innerHTML = `🎯 Final Score: ${score} / ${quizData.questions.length}`;
   submitArea.innerHTML = `
     <div class="action-buttons">
       <button id="copyKnowledgeGapBtn">📋 Copy Response for Knowledge Gap</button>
+      <button id="copyAdaptiveBtn">🚀 Generate Harder Follow-up Quiz</button>
       <button id="reloadQuizBtn">Load New Quiz</button>
     </div>
   `;
 
   document.getElementById("copyKnowledgeGapBtn").addEventListener("click", copyKnowledgeGapPrompt);
+  document.getElementById("copyAdaptiveBtn").addEventListener("click", () => copyAdaptivePrompt(correctQuestions));
   document.getElementById("reloadQuizBtn").addEventListener("click", resetApp);
 }
 
@@ -268,6 +352,129 @@ Then, at the end, give a short summary of the overall concepts I should review t
 
   navigator.clipboard.writeText(resultsText);
   alert("Knowledge gap prompt copied! Paste this into the LLM to get an explanation focused on your mistakes.");
+}
+
+function copyAdaptivePrompt(correctQuestions) {
+  if (!quizData || !Array.isArray(quizData.questions)) return;
+
+  const t = topicInput.value.trim() || "the topic";
+  const c = conceptInput.value.trim() || "the core concepts";
+  const d = difficultySelect.value;
+  const num = numQuestionsInput.value || quizData.questions.length;
+
+  const masteredList = correctQuestions
+    .map((q) => `Q${q.questionNo}: ${q.question}`)
+    .join("\n");
+
+  const prompt = `You are an expert quiz generator creating an adaptive follow-up quiz.
+
+The user just completed a ${d} difficulty quiz on ${t} - ${c} and mastered the following questions:
+
+${masteredList}
+
+Generate exactly ${num} NEW multiple-choice questions based on the topics and concepts covered by the questions above. These follow-up questions must be meaningfully HARDER (a level above ${d} difficulty) — dig deeper into the same topics, test edge cases, subtle nuances, and require real understanding rather than recall. Do not repeat any of the questions above.
+
+Rules:
+1. Return ONLY valid JSON.
+2. Do not include markdown.
+3. Do not include explanations.
+4. Every question must have exactly four options.
+5. Exactly one option must be correct.
+6. correctOption must be an integer from 1 to 4.
+7. Make questions unique.
+8. Use simple English.
+9. If a question or option includes code or multi-line content, keep it inside the JSON string using \\n escape sequences (do not break the JSON with literal line breaks).
+
+Return:
+{
+  "title": "Quiz Title",
+  "questions": [
+    {
+      "questionNo": 1,
+      "question": "Question",
+      "options": ["A", "B", "C", "D"],
+      "correctOption": 2
+    }
+  ]
+}`;
+
+  navigator.clipboard.writeText(prompt);
+  alert("Adaptive follow-up prompt copied! Paste it into the LLM, then paste the returned JSON below.");
+}
+
+function startTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+  }
+  const minutes = parseInt(timerMinutesInput.value, 10) || 5;
+  timeLeft = minutes * 60;
+  timerBar.classList.remove("hidden");
+  timerBar.classList.remove("timer-warning");
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 60) {
+      timerBar.classList.add("timer-warning");
+    }
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      if (!quizSubmitted) {
+        submitQuiz();
+      }
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const remaining = Math.max(timeLeft, 0);
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  timerBar.textContent = `⏱ Time Remaining: ${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function exportQuiz() {
+  let payload;
+  let filename = "quiz.json";
+
+  if (quizData && Array.isArray(quizData.questions)) {
+    payload = JSON.stringify(quizData, null, 2);
+    const title = (quizData.title || "quiz").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    filename = `quiz-${title || "quiz"}.json`;
+  } else if (jsonInput.value.trim()) {
+    payload = jsonInput.value;
+  } else {
+    alert("Nothing to export. Load or paste a quiz first.");
+    return;
+  }
+
+  downloadFile(filename, payload);
+}
+
+function handleImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    jsonInput.value = ev.target.result;
+    alert("Quiz file imported! Click Generate Quiz to render it.");
+  };
+  reader.readAsText(file);
+  event.target.value = "";
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function resetApp() {

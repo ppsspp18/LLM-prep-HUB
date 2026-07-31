@@ -666,3 +666,95 @@ button:active {
   color: #818cf8;
   transform: translateY(-1px);
 }
+
+/* Prompt template select */
+#promptTemplate {
+  margin-bottom: 4px;
+}
+
+.template-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+/* Timer controls */
+.timer-controls {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin: 6px 0 4px;
+  flex-wrap: wrap;
+}
+
+.timer-controls .checkbox-group {
+  margin: 0;
+}
+
+.timer-duration {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.timer-duration label {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.timer-duration input {
+  width: 90px;
+}
+
+/* Timer bar */
+.timer-bar {
+  position: sticky;
+  top: 12px;
+  z-index: 50;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-focus);
+  color: var(--text-primary);
+  border-radius: 12px;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  letter-spacing: 1px;
+}
+
+.timer-bar.timer-warning {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: var(--error-border);
+  color: var(--error-text);
+  animation: timer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Secondary buttons */
+.secondary-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  box-shadow: none;
+}
+
+.secondary-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: var(--border-focus);
+  color: #818cf8;
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .timer-controls {
+    gap: 12px;
+  }
+}

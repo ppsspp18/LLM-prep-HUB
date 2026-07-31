@@ -15,14 +15,53 @@ const submitArea = document.getElementById("submitArea");
 const result = document.getElementById("result");
 const copyPromptBtn = document.getElementById("copyPromptBtn");
 const generateQuizBtn = document.getElementById("generateQuizBtn");
+const promptTemplateSelect = document.getElementById("promptTemplate");
+const exportQuizBtn = document.getElementById("exportQuizBtn");
+const importQuizBtn = document.getElementById("importQuizBtn");
+const importFileInput = document.getElementById("importFileInput");
 
 const feedbackJsonCard = document.getElementById("feedbackJsonCard");
 const feedbackJsonInput = document.getElementById("feedbackJsonInput");
 const showFeedbackBtn = document.getElementById("showFeedbackBtn");
 
+const PROMPT_TEMPLATES = {
+  standard: { label: "Standard", instructions: "" },
+  deepDive: {
+    label: "Deep Dive Technical",
+    instructions: "Focus on advanced technical depth: edge cases, trade-offs, and underlying mechanisms. Prefer questions that separate advanced learners from beginners."
+  },
+  fundamentals: {
+    label: "Conceptual Fundamentals",
+    instructions: "Focus on core concepts, definitions, intuition, and first principles. Prefer questions that establish strong foundational understanding."
+  },
+  codeHeavy: {
+    label: "Code-Heavy",
+    instructions: "Include code snippets, debugging, and 'how would you implement X' style questions. Keep code inside \\n escape sequences in the JSON."
+  },
+  realWorld: {
+    label: "Real-World Scenarios",
+    instructions: "Frame questions as realistic, practical scenarios or case studies that apply the concept to real production situations."
+  },
+  rapidFire: {
+    label: "Rapid Fire",
+    instructions: "Keep questions short, punchy, and quick to answer. Favor one-liner questions that test recall and speed."
+  },
+  systemDesign: {
+    label: "System Design",
+    instructions: "Focus on architecture, scalability, reliability, and trade-offs. Prefer questions about designing systems or choosing between architectural approaches."
+  },
+  behavioral: {
+    label: "Behavioral / STAR",
+    instructions: "Frame questions as behavioral interview questions about past experiences, teamwork, leadership, and conflict resolution. Encourage STAR-format (Situation, Task, Action, Result) answers."
+  }
+};
+
 copyPromptBtn.addEventListener("click", copyPrompt);
 generateQuizBtn.addEventListener("click", handleGenerate);
 showFeedbackBtn.addEventListener("click", renderInterviewFeedback);
+exportQuizBtn.addEventListener("click", exportInterview);
+importQuizBtn.addEventListener("click", () => importFileInput.click());
+importFileInput.addEventListener("change", handleImportFile);
 
 const helpBtn = document.getElementById("helpBtn");
 const helpModal = document.getElementById("helpModal");
@@ -88,6 +127,11 @@ ${d}`;
 
   if (additionalDescription) {
     prompt += `\n\nAdditional Instructions:\n${additionalDescription}`;
+  }
+
+  const template = PROMPT_TEMPLATES[promptTemplateSelect.value] || PROMPT_TEMPLATES.standard;
+  if (template.instructions) {
+    prompt += `\n\nPrompt Template (${template.label}):\n${template.instructions}`;
   }
 
   prompt += `
@@ -288,10 +332,113 @@ function renderInterviewFeedback() {
     `;
   }
 
-  submitArea.innerHTML = `<button id="reloadInterviewBtn">Load New Interview</button>`;
+  submitArea.innerHTML = `
+    <div class="action-buttons">
+      <button id="copyAdaptiveBtn">🚀 Generate Harder Follow-up Interview</button>
+      <button id="reloadInterviewBtn">Load New Interview</button>
+    </div>
+  `;
+  document.getElementById("copyAdaptiveBtn").addEventListener("click", copyAdaptivePrompt);
   document.getElementById("reloadInterviewBtn").addEventListener("click", resetApp);
 
   feedbackJsonCard.classList.add("hidden");
+}
+
+function copyAdaptivePrompt() {
+  if (!interviewFeedbackData || !Array.isArray(interviewFeedbackData.results)) {
+    alert("Show interview feedback first.");
+    return;
+  }
+
+  const t = topicInput.value.trim() || "the topic";
+  const c = conceptInput.value.trim() || "the core concepts";
+  const d = difficultySelect.value;
+  const num = numQuestionsInput.value || (interviewData && interviewData.questions.length) || 10;
+
+  const weak = interviewFeedbackData.results.filter((item) => Number(item.score) < 7);
+  const baseList = (weak.length > 0 ? weak : interviewFeedbackData.results)
+    .map((item) => `Q${item.questionNo}: ${item.question}`)
+    .join("\n");
+
+  const focusNote = weak.length > 0
+    ? "The candidate scored below 7/10 on the following questions."
+    : "The candidate performed well on all questions (score 7+/10).";
+
+  const prompt = `You are an expert technical interviewer creating an adaptive follow-up interview.
+
+The candidate just completed a ${d} difficulty interview on ${t} - ${c}. ${focusNote}
+
+Questions to build on:
+${baseList}
+
+Generate exactly ${num} NEW open-ended interview questions that go a level deeper into the same topics and concepts. They must be meaningfully HARDER than ${d} difficulty — probing edge cases, trade-offs, deeper understanding, and problem-solving under pressure. Do not repeat any of the questions above.
+
+Rules:
+1. Return ONLY valid JSON.
+2. Do not include markdown.
+3. Do not include explanations.
+4. Questions must be open-ended interview questions, not MCQs.
+5. Questions should test conceptual understanding, practical thinking, and problem-solving.
+6. Use simple English.
+7. Make all questions unique.
+8. If a question includes code or multi-line content, keep it inside the JSON string using \\n escape sequences (do not break the JSON with literal line breaks).
+
+Return:
+{
+  "title": "Interview Question Set Title",
+  "questions": [
+    {
+      "questionNo": 1,
+      "question": "Explain linear regression in simple terms."
+    }
+  ]
+}`;
+
+  navigator.clipboard.writeText(prompt);
+  alert("Adaptive follow-up prompt copied! Paste it into the LLM, then paste the returned JSON below.");
+}
+
+function exportInterview() {
+  let payload;
+  let filename = "interview.json";
+
+  if (interviewData && Array.isArray(interviewData.questions)) {
+    payload = JSON.stringify(interviewData, null, 2);
+    const title = (interviewData.title || "interview").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    filename = `interview-${title || "interview"}.json`;
+  } else if (jsonInput.value.trim()) {
+    payload = jsonInput.value;
+  } else {
+    alert("Nothing to export. Load or paste interview questions first.");
+    return;
+  }
+
+  downloadFile(filename, payload);
+}
+
+function handleImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    jsonInput.value = ev.target.result;
+    alert("Interview file imported! Click Generate Interview Questions to render it.");
+  };
+  reader.readAsText(file);
+  event.target.value = "";
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function resetApp() {

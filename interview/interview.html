@@ -59,19 +59,37 @@
       
       <label for="additionalDescription">Additional Description (optional)</label>
       <textarea id="additionalDescription" placeholder="Any extra instructions or context for the question generator (e.g. focus areas, exclusions, style preferences)..."></textarea>
-      
+
+      <label for="promptTemplate">Prompt Template</label>
+      <select id="promptTemplate">
+        <option value="standard">Standard</option>
+        <option value="deepDive">Deep Dive Technical</option>
+        <option value="fundamentals">Conceptual Fundamentals</option>
+        <option value="codeHeavy">Code-Heavy</option>
+        <option value="realWorld">Real-World Scenarios</option>
+        <option value="rapidFire">Rapid Fire</option>
+        <option value="systemDesign">System Design</option>
+        <option value="behavioral">Behavioral / STAR</option>
+      </select>
+      <p class="template-hint">Templates add focus instructions to the generated prompt. You can still add custom instructions above.</p>
+
       <div class="checkbox-group">
         <input type="checkbox" id="paretoRule">
         <label for="paretoRule">Apply 80/20 Rule (Focus on most common/core concepts)</label>
       </div>
-      
+
       <button id="copyPromptBtn">📋 Copy Prompt</button>
     </div>
 
     <div class="card">
       <h2 id="jsonSectionTitle">Paste Interview Questions JSON</h2>
       <textarea id="jsonInput" placeholder="Paste interview questions JSON here..."></textarea><br>
-      <button id="generateQuizBtn">Generate Interview Questions</button>
+      <div class="action-buttons">
+        <button id="generateQuizBtn">Generate Interview Questions</button>
+        <button id="exportQuizBtn" class="secondary-btn">⬇ Export JSON</button>
+        <button id="importQuizBtn" class="secondary-btn">⬆ Import JSON</button>
+      </div>
+      <input type="file" id="importFileInput" accept=".json,application/json" class="hidden">
     </div>
 
     <div id="quiz"></div>
@@ -93,7 +111,7 @@
       </div>
       <div class="modal-body">
         <ol>
-          <li>Fill in your desired <strong>Topic</strong>, <strong>Concept</strong>, <strong>Difficulty</strong>, and number of questions.</li>
+          <li>Fill in your desired <strong>Topic</strong>, <strong>Concept</strong>, <strong>Difficulty</strong>, and number of questions. Optionally pick a <strong>Prompt Template</strong>.</li>
           <li>Click <strong>📋 Copy Prompt</strong> and paste it into any LLM to generate interview questions JSON.</li>
           <li>Paste the resulting JSON into the box below and click <strong>Generate Interview Questions</strong>.</li>
           <li>Write your answers to each open-ended question.</li>
