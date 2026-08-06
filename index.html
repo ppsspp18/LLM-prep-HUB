@@ -3,27 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LLM Quiz Generator</title>
+  <title>LLM Learning Hub</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="home-container">
     <div class="card home-card">
-      <h1>LLM Quiz & Interview Hub</h1>
-      <p style="color: var(--text-secondary); margin-top: 8px;">Select a mode to generate AI-powered learning modules and technical assessments.</p>
-      
+      <div class="brand-badge">✨ AI-Powered Learning</div>
+      <h1>LLM Learning Hub</h1>
+      <p class="home-subtitle">Generate AI-powered quizzes, interview practice, and English learning modules — no API keys needed. Use any LLM (ChatGPT, Claude, Gemini) as the engine.</p>
+
       <div class="mode-grid">
         <a href="quiz/quiz.html" class="mode-card">
           <span class="mode-icon">📝</span>
           <span class="mode-title">Quiz Mode</span>
-          <span style="font-size: 13px; color: var(--text-secondary);">Multiple-choice tests & knowledge gaps</span>
+          <span class="mode-desc">Multiple-choice tests & knowledge gaps</span>
         </a>
-        
+
         <a href="interview/interview.html" class="mode-card">
           <span class="mode-icon">🎤</span>
           <span class="mode-title">Interview Mode</span>
-          <span style="font-size: 13px; color: var(--text-secondary);">Open-ended Q&A with voice & AI feedback</span>
+          <span class="mode-desc">Open-ended Q&A with voice & AI feedback</span>
         </a>
+
+        <a href="english/english.html" class="mode-card">
+          <span class="mode-icon">🗣️</span>
+          <span class="mode-title">English Learner</span>
+          <span class="mode-desc">Translate Hinglish to English & get corrections</span>
+        </a>
+      </div>
+
+      <div class="home-footer">
+        <strong>How it works</strong>
+        <p>Copy a prompt → paste it into any LLM → copy the response back here to render it.</p>
       </div>
     </div>
   </div>

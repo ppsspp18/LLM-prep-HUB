@@ -150,8 +150,12 @@ Return:
   ]
 }`;
 
-  navigator.clipboard.writeText(prompt);
-  alert("Prompt copied!");
+  copyText(prompt).then((ok) => {
+    showToast(
+      ok ? "Prompt copied! Paste it into your favorite LLM." : "Copy failed — please copy the prompt manually.",
+      ok ? "success" : "error"
+    );
+  });
 }
 
 function handleGenerate() {
@@ -162,12 +166,12 @@ function loadInterviewQuestions() {
   try {
     interviewData = JSON.parse(jsonInput.value);
   } catch (error) {
-    alert("Invalid JSON");
+    showToast("Invalid JSON. Please check what you pasted.", "error");
     return;
   }
 
   if (!interviewData || !Array.isArray(interviewData.questions)) {
-    alert("Invalid interview JSON format");
+    showToast("Invalid interview JSON format — expected a JSON object with a \"questions\" array.", "error");
     return;
   }
 
@@ -207,7 +211,7 @@ function loadInterviewQuestions() {
 
 function copyInterviewFeedbackPrompt() {
   if (!interviewData || !Array.isArray(interviewData.questions)) {
-    alert("Load interview questions first.");
+    showToast("Load interview questions first.", "error");
     return;
   }
 
@@ -255,26 +259,31 @@ Return JSON in this exact structure:
   ]
 }`;
 
-  navigator.clipboard.writeText(prompt);
-  feedbackJsonCard.classList.remove("hidden");
-  alert("Interview feedback prompt copied! Now paste the AI feedback JSON below.");
+  copyText(prompt).then((ok) => {
+    if (!ok) {
+      showToast("Copy failed — please copy the prompt manually.", "error");
+      return;
+    }
+    feedbackJsonCard.classList.remove("hidden");
+    showToast("Interview feedback prompt copied! Now paste the AI feedback JSON below.");
+  });
 }
 
 function renderInterviewFeedback() {
   if (!interviewData || !Array.isArray(interviewData.questions)) {
-    alert("Load interview questions first.");
+    showToast("Load interview questions first.", "error");
     return;
   }
 
   try {
     interviewFeedbackData = JSON.parse(feedbackJsonInput.value);
   } catch (error) {
-    alert("Invalid feedback JSON");
+    showToast("Invalid feedback JSON. Please check what you pasted.", "error");
     return;
   }
 
   if (!interviewFeedbackData || !Array.isArray(interviewFeedbackData.results)) {
-    alert("Invalid interview feedback JSON format");
+    showToast("Invalid interview feedback JSON format — expected a JSON object with a \"results\" array.", "error");
     return;
   }
 
@@ -346,7 +355,7 @@ function renderInterviewFeedback() {
 
 function copyAdaptivePrompt() {
   if (!interviewFeedbackData || !Array.isArray(interviewFeedbackData.results)) {
-    alert("Show interview feedback first.");
+    showToast("Show interview feedback first.", "error");
     return;
   }
 
@@ -394,8 +403,14 @@ Return:
   ]
 }`;
 
-  navigator.clipboard.writeText(prompt);
-  alert("Adaptive follow-up prompt copied! Paste it into the LLM, then paste the returned JSON below.");
+  copyText(prompt).then((ok) => {
+    showToast(
+      ok
+        ? "Adaptive follow-up prompt copied! Paste it into the LLM, then paste the returned JSON below."
+        : "Copy failed — please copy the prompt manually.",
+      ok ? "success" : "error"
+    );
+  });
 }
 
 function exportInterview() {
@@ -409,7 +424,7 @@ function exportInterview() {
   } else if (jsonInput.value.trim()) {
     payload = jsonInput.value;
   } else {
-    alert("Nothing to export. Load or paste interview questions first.");
+    showToast("Nothing to export. Load or paste interview questions first.", "error");
     return;
   }
 
@@ -423,7 +438,7 @@ function handleImportFile(event) {
   const reader = new FileReader();
   reader.onload = (ev) => {
     jsonInput.value = ev.target.result;
-    alert("Interview file imported! Click Generate Interview Questions to render it.");
+    showToast("Interview file imported! Click Generate Interview Questions to render it.");
   };
   reader.readAsText(file);
   event.target.value = "";

@@ -156,8 +156,12 @@ Return:
   ]
 }`;
 
-  navigator.clipboard.writeText(prompt);
-  alert("Prompt copied!");
+  copyText(prompt).then((ok) => {
+    showToast(
+      ok ? "Prompt copied! Paste it into your favorite LLM." : "Copy failed — please copy the prompt manually.",
+      ok ? "success" : "error"
+    );
+  });
 }
 
 function handleGenerate() {
@@ -168,12 +172,12 @@ function loadQuiz() {
   try {
     quizData = JSON.parse(jsonInput.value);
   } catch (error) {
-    alert("Invalid JSON");
+    showToast("Invalid JSON. Please check what you pasted.", "error");
     return;
   }
 
   if (!quizData || !Array.isArray(quizData.questions)) {
-    alert("Invalid quiz format");
+    showToast("Invalid quiz format — expected a JSON object with a \"questions\" array.", "error");
     return;
   }
 
@@ -329,8 +333,14 @@ function copyKnowledgeGapPrompt() {
 
   if (missedQuestions.length === 0) {
     const prompt = `I just took a multiple-choice quiz on ${t} - ${c} and answered every question correctly. Please give me a short, encouraging summary of the key concepts this quiz covered, and suggest 2-3 slightly more advanced or related topics I could explore next to deepen my understanding.`;
-    navigator.clipboard.writeText(prompt);
-    alert("Prompt copied! (You got a perfect score, so this asks for next-step topics instead.)");
+    copyText(prompt).then((ok) => {
+      showToast(
+        ok
+          ? "Prompt copied! (You got a perfect score, so this asks for next-step topics instead.)"
+          : "Copy failed — please copy the prompt manually.",
+        ok ? "success" : "error"
+      );
+    });
     return;
   }
 
@@ -350,8 +360,14 @@ function copyKnowledgeGapPrompt() {
 
 Then, at the end, give a short summary of the overall concepts I should review to master this topic.`;
 
-  navigator.clipboard.writeText(resultsText);
-  alert("Knowledge gap prompt copied! Paste this into the LLM to get an explanation focused on your mistakes.");
+  copyText(resultsText).then((ok) => {
+    showToast(
+      ok
+        ? "Knowledge gap prompt copied! Paste it into the LLM to get explanations focused on your mistakes."
+        : "Copy failed — please copy the prompt manually.",
+      ok ? "success" : "error"
+    );
+  });
 }
 
 function copyAdaptivePrompt(correctQuestions) {
@@ -398,8 +414,14 @@ Return:
   ]
 }`;
 
-  navigator.clipboard.writeText(prompt);
-  alert("Adaptive follow-up prompt copied! Paste it into the LLM, then paste the returned JSON below.");
+  copyText(prompt).then((ok) => {
+    showToast(
+      ok
+        ? "Adaptive follow-up prompt copied! Paste it into the LLM, then paste the returned JSON below."
+        : "Copy failed — please copy the prompt manually.",
+      ok ? "success" : "error"
+    );
+  });
 }
 
 function startTimer() {
@@ -445,7 +467,7 @@ function exportQuiz() {
   } else if (jsonInput.value.trim()) {
     payload = jsonInput.value;
   } else {
-    alert("Nothing to export. Load or paste a quiz first.");
+    showToast("Nothing to export. Load or paste a quiz first.", "error");
     return;
   }
 
@@ -459,7 +481,7 @@ function handleImportFile(event) {
   const reader = new FileReader();
   reader.onload = (ev) => {
     jsonInput.value = ev.target.result;
-    alert("Quiz file imported! Click Generate Quiz to render it.");
+    showToast("Quiz file imported! Click Generate Quiz to render it.");
   };
   reader.readAsText(file);
   event.target.value = "";

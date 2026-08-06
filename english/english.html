@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>LLM Learning Hub - English Learner</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <div class="top-nav">
+    <a href="../index.html" class="back-btn-top">← Back to Home</a>
+    <button id="helpBtn" class="help-btn-top">❓ How to Use</button>
+  </div>
+
+  <div class="container">
+    <div class="step-flow">
+      <div class="step active" id="step1">
+        <span class="step-num">1</span>
+        <span class="step-label">Generate Hinglish Sentences</span>
+      </div>
+      <div class="step" id="step2">
+        <span class="step-num">2</span>
+        <span class="step-label">Translate to English</span>
+      </div>
+      <div class="step" id="step3">
+        <span class="step-num">3</span>
+        <span class="step-label">Get Feedback</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h1>English Learner</h1>
+      <p class="template-hint">Practice translating Hinglish sentences into proper English and get AI-powered corrections and improvement tips.</p>
+
+      <div class="input-group-aesthetic">
+        <label for="description"><span>✍️</span> What to Generate</label>
+        <textarea id="description" placeholder="Describe what sentences to generate, e.g. morning routine, ordering food at a restaurant, travel phrases, office conversations, talking to a shopkeeper..."></textarea>
+      </div>
+
+      <div class="topic-concept-grid">
+        <div>
+          <label for="numSentences">Number of Sentences</label>
+          <input type="number" id="numSentences" value="8" min="1" max="50">
+        </div>
+        <div>
+          <label for="difficulty">Difficulty</label>
+          <select id="difficulty">
+            <option>Easy</option>
+            <option selected>Medium</option>
+            <option>Hard</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="style">Style / Theme</label>
+      <select id="style">
+        <option>Everyday Conversation</option>
+        <option>Casual & Fun</option>
+        <option>Formal & Polite</option>
+        <option>Business / Office</option>
+        <option>Travel</option>
+        <option>Food & Restaurants</option>
+        <option>Shopping</option>
+      </select>
+      <p class="template-hint">Add your own description above for complete control over what the LLM generates.</p>
+
+      <button id="copyPromptBtn">📋 Copy Hinglish Prompt</button>
+    </div>
+
+    <div class="card">
+      <h2>Paste Hinglish Sentences JSON</h2>
+      <textarea id="jsonInput" placeholder='Paste the Hinglish sentences JSON returned by the LLM here...'></textarea><br>
+      <div class="action-buttons">
+        <button id="generateBtn">Generate Sentences</button>
+        <button id="exportBtn" class="secondary-btn">⬇ Export JSON</button>
+        <button id="importBtn" class="secondary-btn">⬆ Import JSON</button>
+      </div>
+      <input type="file" id="importFileInput" accept=".json,application/json" class="hidden">
+    </div>
+
+    <div class="card hidden" id="translationSection">
+      <h2>Translate Each Sentence to English</h2>
+      <p class="template-hint">Read each Hinglish sentence below and type its correct English translation. Then copy the response prompt for AI feedback.</p>
+      <div id="sentences"></div>
+      <button id="copyTranslationPromptBtn" class="hidden">📋 Copy Response Prompt</button>
+    </div>
+
+    <div class="card hidden" id="feedbackJsonCard">
+      <h2>Paste Feedback JSON</h2>
+      <textarea id="feedbackJsonInput" placeholder="Paste the AI feedback JSON here..."></textarea><br>
+      <button id="showFeedbackBtn">Show Feedback</button>
+    </div>
+
+    <div id="result"></div>
+    <div id="feedback"></div>
+  </div>
+
+  <div id="helpModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>How to Use English Learner</h2>
+        <button id="closeModalBtn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <ol>
+          <li>Describe what sentences you want in <strong>What to Generate</strong> (e.g. daily routine, restaurant, travel).</li>
+          <li>Click <strong>📋 Copy Hinglish Prompt</strong> and paste it into any LLM (ChatGPT, Claude, Gemini) to generate Hinglish sentences.</li>
+          <li>Paste the returned JSON into the <strong>Paste Hinglish Sentences JSON</strong> box and click <strong>Generate Sentences</strong>.</li>
+          <li>Type the correct <strong>English translation</strong> for each Hinglish sentence.</li>
+          <li>Click <strong>📋 Copy Response Prompt</strong>, paste it into the LLM to get mistakes & improvements.</li>
+          <li>Paste the returned feedback JSON and click <strong>Show Feedback</strong> to see your mistakes and how to improve.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="../common.js"></script>
+  <script src="english.js"></script>
+</body>
+</html>
