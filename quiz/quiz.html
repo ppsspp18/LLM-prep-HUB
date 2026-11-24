@@ -6,77 +6,55 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>LLM Quiz Generator - Quiz Mode</title>
+  <title>LLM Quiz Generator - Technical Quiz Mode</title>
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
   <div class="top-nav">
-    <a href="../index.html" class="back-btn-top">← Back to Home</a>
+    <a href="../index.html" class="back-btn-top">← Back to Hub</a>
     <button id="helpBtn" class="help-btn-top">❓ How to Use</button>
   </div>
 
   <div class="container">
     <div class="card">
-      <h1>LLM Quiz Generator</h1>
+      <h1>Technical Quiz Generator</h1>
+      <p class="template-hint">Generate focused technical multiple-choice quizzes to master engineering concepts and identify knowledge gaps.</p>
       
-      <div class="topic-concept-grid">
-        <div class="input-group-aesthetic">
-          <label for="topic"><span>📚</span> Topic</label>
-          <div class="input-with-icon">
-            <span class="input-icon">🔍</span>
-            <input id="topic" placeholder="e.g. Machine Learning">
-          </div>
+      <div class="two-col-grid">
+        <div>
+          <label for="topic">Topic</label>
+          <input type="text" id="topic" placeholder="e.g. System Design, OS, Python">
           <div class="suggestion-chips">
-            <button type="button" class="chip" onclick="setTopic('Machine Learning')">Machine Learning</button>
             <button type="button" class="chip" onclick="setTopic('System Design')">System Design</button>
-            <button type="button" class="chip" onclick="setTopic('Web Development')">Web Dev</button>
+            <button type="button" class="chip" onclick="setTopic('Data Structures')">DSA</button>
+            <button type="button" class="chip" onclick="setTopic('Operating Systems')">OS</button>
           </div>
         </div>
 
-        <div class="input-group-aesthetic">
-          <label for="concept"><span>💡</span> Concept</label>
-          <div class="input-with-icon">
-            <span class="input-icon">🎯</span>
-            <input id="concept" placeholder="e.g. Linear Regression">
-          </div>
+        <div>
+          <label for="concept">Concept</label>
+          <input type="text" id="concept" placeholder="e.g. Distributed Caching, Concurrency">
           <div class="suggestion-chips">
-            <button type="button" class="chip" onclick="setConcept('Linear Regression')">Linear Regression</button>
-            <button type="button" class="chip" onclick="setConcept('Microservices')">Microservices</button>
-            <button type="button" class="chip" onclick="setConcept('React Hooks')">React Hooks</button>
+            <button type="button" class="chip" onclick="setConcept('Distributed Caching')">Caching</button>
+            <button type="button" class="chip" onclick="setConcept('Concurrency & Locks')">Concurrency</button>
+            <button type="button" class="chip" onclick="setConcept('Indexing & B-Trees')">Indexing</button>
           </div>
         </div>
       </div>
       
-      <label for="difficulty">Difficulty</label>
-      <select id="difficulty">
-        <option>Easy</option>
-        <option>Medium</option>
-        <option>Hard</option>
-      </select>
+      <label>Difficulty</label>
+      <div class="pill-group" id="difficultyGroup">
+        <button type="button" class="pill-btn" data-value="Easy">Easy</button>
+        <button type="button" class="pill-btn active" data-value="Medium">Medium</button>
+        <button type="button" class="pill-btn" data-value="Hard">Hard</button>
+      </div>
+      <input type="hidden" id="difficulty" value="Medium">
       
       <label for="numQuestions">Number of Questions</label>
       <input type="number" id="numQuestions" value="10" min="1" max="50">
       
-      <label for="additionalDescription">Additional Description (optional)</label>
-      <textarea id="additionalDescription" placeholder="Any extra instructions or context for the question generator (e.g. focus areas, exclusions, style preferences)..."></textarea>
-
-      <label for="promptTemplate">Prompt Template</label>
-      <select id="promptTemplate">
-        <option value="standard">Standard</option>
-        <option value="deepDive">Deep Dive Technical</option>
-        <option value="fundamentals">Conceptual Fundamentals</option>
-        <option value="codeHeavy">Code-Heavy</option>
-        <option value="realWorld">Real-World Scenarios</option>
-        <option value="rapidFire">Rapid Fire</option>
-        <option value="tricky">Tricky / Common Mistakes</option>
-        <option value="systemDesign">System Design</option>
-      </select>
-      <p class="template-hint">Templates add focus instructions to the generated prompt. You can still add custom instructions above.</p>
-
-      <div class="checkbox-group">
-        <input type="checkbox" id="paretoRule">
-        <label for="paretoRule">Apply 80/20 Rule (Focus on most common/core concepts)</label>
-      </div>
+      <label for="additionalDescription">Additional Focus (optional)</label>
+      <textarea id="additionalDescription" style="min-height: 80px;" placeholder="Specific focus areas, languages, production scenarios, or edge cases..."></textarea>
 
       <div class="timer-controls">
         <div class="checkbox-group">
@@ -84,8 +62,8 @@
           <label for="enableTimer">Enable Timer</label>
         </div>
         <div class="timer-duration">
-          <label for="timerMinutes">Time (minutes)</label>
-          <input type="number" id="timerMinutes" value="5" min="1" max="120">
+          <label for="timerMinutes">Minutes:</label>
+          <input type="number" id="timerMinutes" value="10" min="1" max="120">
         </div>
       </div>
 
@@ -93,20 +71,27 @@
     </div>
 
     <div class="card">
-      <h2 id="jsonSectionTitle">Paste JSON Response</h2>
-      <textarea id="jsonInput" placeholder="Paste MCQ quiz JSON here..."></textarea><br>
+      <h2>Paste Quiz JSON</h2>
+      <textarea id="jsonInput" placeholder="Paste the quiz JSON returned by your LLM here..."></textarea>
       <div class="action-buttons">
         <button id="generateQuizBtn">Generate Quiz</button>
-        <button id="exportQuizBtn" class="secondary-btn">⬇ Export JSON</button>
-        <button id="importQuizBtn" class="secondary-btn">⬆ Import JSON</button>
       </div>
-      <input type="file" id="importFileInput" accept=".json,application/json" class="hidden">
     </div>
 
     <div id="timerBar" class="timer-bar hidden"></div>
     <div id="quiz"></div>
     <div id="submitArea"></div>
     <div id="result"></div>
+
+    <div id="feedbackPasteCard" class="card hidden">
+      <h2>Paste AI Feedback (Optional)</h2>
+      <p class="template-hint">After copying the knowledge gap prompt to your LLM, paste the AI's response here to view it cleanly inside the app.</p>
+      <textarea id="feedbackTextInput" placeholder="Paste the AI's explanation and conceptual review here..."></textarea>
+      <div class="action-buttons">
+        <button id="renderFeedbackBtn">Show Feedback</button>
+      </div>
+    </div>
+    <div id="feedbackViewArea"></div>
   </div>
 
   <div id="helpModal" class="modal-overlay">
@@ -117,11 +102,11 @@
       </div>
       <div class="modal-body">
         <ol>
-          <li>Fill in your desired <strong>Topic</strong>, <strong>Concept</strong>, <strong>Difficulty</strong>, and number of questions. Optionally pick a <strong>Prompt Template</strong> and enable the <strong>Timer</strong>.</li>
-          <li>Click <strong>📋 Copy Prompt</strong> to copy the AI prompt to your clipboard.</li>
-          <li>Paste the prompt into any LLM (ChatGPT, Claude, etc.) to generate the quiz JSON.</li>
-          <li>Paste the resulting JSON into the <strong>Paste JSON Response</strong> box below.</li>
-          <li>Click <strong>Generate Quiz</strong>, take the test, and click <strong>Submit Quiz</strong> to view your score and explanations.</li>
+          <li>Enter your target <strong>Topic</strong>, <strong>Concept</strong>, pick a difficulty, and choose question count.</li>
+          <li>Click <strong>📋 Copy Prompt</strong> and paste it into any LLM (ChatGPT, Claude, Gemini).</li>
+          <li>Copy the JSON response from the LLM and paste it into the <strong>Paste Quiz JSON</strong> box.</li>
+          <li>Click <strong>Generate Quiz</strong>, solve the questions, and click <strong>Submit Quiz</strong>.</li>
+          <li>Click <strong>📋 Copy Concept & Knowledge Gap Prompt</strong> to get a single unified explanation of the forgotten concepts from the LLM.</li>
         </ol>
       </div>
     </div>

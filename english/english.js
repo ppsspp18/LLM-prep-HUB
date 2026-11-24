@@ -1,39 +1,63 @@
-let hinglishData;
-let translations = [];
-let feedbackData;
+let practiceData;
+let testSubmitted = false;
 
-const descriptionInput = document.getElementById("description");
-const numSentencesInput = document.getElementById("numSentences");
-const difficultySelect = document.getElementById("difficulty");
-const styleSelect = document.getElementById("style");
+const practiceTypeInput = document.getElementById("practiceType");
+const practiceTypeButtons = document.querySelectorAll("#practiceTypeGroup .pill-btn");
+const targetLevelInput = document.getElementById("targetLevel");
+const targetLevelButtons = document.querySelectorAll("#targetLevelGroup .pill-btn");
+
+const topicInput = document.getElementById("topic");
+const numQuestionsInput = document.getElementById("numQuestions");
+const additionalDescriptionInput = document.getElementById("additionalDescription");
 const copyPromptBtn = document.getElementById("copyPromptBtn");
 
 const jsonInput = document.getElementById("jsonInput");
 const generateBtn = document.getElementById("generateBtn");
-const exportBtn = document.getElementById("exportBtn");
-const importBtn = document.getElementById("importBtn");
-const importFileInput = document.getElementById("importFileInput");
 
-const sentencesContainer = document.getElementById("sentences");
-const translationSection = document.getElementById("translationSection");
-const copyTranslationPromptBtn = document.getElementById("copyTranslationPromptBtn");
-const feedbackJsonCard = document.getElementById("feedbackJsonCard");
-const feedbackJsonInput = document.getElementById("feedbackJsonInput");
-const showFeedbackBtn = document.getElementById("showFeedbackBtn");
+const practiceArea = document.getElementById("practiceArea");
+const passageContainer = document.getElementById("passageContainer");
+const questionsContainer = document.getElementById("questionsContainer");
+const submitArea = document.getElementById("submitArea");
 const result = document.getElementById("result");
-const feedbackContainer = document.getElementById("feedback");
+
+const feedbackPasteCard = document.getElementById("feedbackPasteCard");
+const feedbackTextInput = document.getElementById("feedbackTextInput");
+const showFeedbackBtn = document.getElementById("showFeedbackBtn");
+const feedbackViewArea = document.getElementById("feedbackViewArea");
 
 const step1 = document.getElementById("step1");
 const step2 = document.getElementById("step2");
 const step3 = document.getElementById("step3");
 
+// Pill selection for practice type
+practiceTypeButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    practiceTypeButtons.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    practiceTypeInput.value = btn.dataset.value;
+    // Adjust default question count
+    if (btn.dataset.value.includes("Reading Comprehension")) {
+      numQuestionsInput.value = 4;
+    } else if (numQuestionsInput.value === "4") {
+      numQuestionsInput.value = 6;
+    }
+  });
+});
+
+// Pill selection for target level
+targetLevelButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    targetLevelButtons.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    targetLevelInput.value = btn.dataset.value;
+  });
+});
+
 copyPromptBtn.addEventListener("click", copyPrompt);
-generateBtn.addEventListener("click", loadHinglish);
-exportBtn.addEventListener("click", exportData);
-importBtn.addEventListener("click", () => importFileInput.click());
-importFileInput.addEventListener("change", handleImportFile);
-copyTranslationPromptBtn.addEventListener("click", copyTranslationPrompt);
-showFeedbackBtn.addEventListener("click", renderFeedback);
+generateBtn.addEventListener("click", loadPractice);
+if (showFeedbackBtn) {
+  showFeedbackBtn.addEventListener("click", renderFeedback);
+}
 
 const helpBtn = document.getElementById("helpBtn");
 const helpModal = document.getElementById("helpModal");
@@ -53,282 +77,364 @@ helpModal.addEventListener("click", (e) => {
   }
 });
 
+window.setTopic = function(val) {
+  topicInput.value = val;
+  topicInput.focus();
+};
+
 function updateStep(step) {
   [step1, step2, step3].forEach((el, i) => el.classList.toggle("active", i === step - 1));
 }
 
 function copyPrompt() {
-  const description = descriptionInput.value.trim();
-  const num = numSentencesInput.value || 8;
-  const d = difficultySelect.value;
-  const style = styleSelect.value;
+  const mode = practiceTypeInput.value;
+  const level = targetLevelInput.value;
+  const topic = topicInput.value.trim() || "High-Yield CAT VARC & Modern Technology";
+  const num = numQuestionsInput.value || (mode.includes("Reading Comprehension") ? 4 : 6);
+  const additional = additionalDescriptionInput.value.trim();
 
-  if (!description) {
-    showToast("Please describe what sentences to generate first.", "error");
-    descriptionInput.focus();
-    return;
+  let isRC = mode.includes("Reading Comprehension");
+
+  let prompt = `You are a premier CAT VARC mentor and executive technical communication coach.
+
+Create an elite practice set designed to enhance verbal ability, critical reasoning, and reading comprehension for the CAT exam and top-tier tech job communication.
+
+Practice Mode: ${mode}
+Target Standard: ${level}
+Topic / Domain: ${topic}
+Number of Questions: ${num}`;
+
+  if (additional) {
+    prompt += `\nAdditional Focus / Directives:\n${additional}`;
   }
 
-  const prompt = `You are an expert English tutor for Hindi speakers.
+  if (isRC) {
+    prompt += `
 
-Generate exactly ${num} Hinglish sentences to help the user practice translating Hinglish into proper English.
+SPECIFIC INSTRUCTIONS FOR READING COMPREHENSION:
+1. Provide a dense, intellectually stimulating, well-crafted passage (350 - 550 words) relevant to ${topic}. The prose should mirror the analytical style, vocabulary, and nuanced arguments found in CAT passages and premier tech/academic publications (Aeon, The Economist, ACM Queue, MIT Tech Review).
+2. Generate exactly ${num} questions based strictly on the passage.
+3. Questions must test:
+   - Primary Purpose / Central Thesis
+   - Subtle Inferences & Author's Attitude/Tone
+   - Logical Extensions / Strengthening or Weakening Claims
+   - Contextual meaning of key phrases
+4. Distractors (wrong options) should be realistic CAT-style traps: partial truths, out-of-scope generalizations, extreme wording, or reversed causality.
+5. Exactly one option must be unambiguously correct.`;
+  } else {
+    prompt += `
 
-Hinglish means everyday Hindi sentences written in the Latin (English) alphabet, commonly mixed with English words.
-Examples: "Aaj bahut thand hai, chai peelo.", "Kal office me meeting hai kya?"
+SPECIFIC INSTRUCTIONS FOR VERBAL ABILITY & TECH COMMUNICATION:
+1. Generate exactly ${num} challenging questions testing:
+   - Para Jumbles (logical sequence of 4-5 sentences with transitional links)
+   - Critical Reasoning (identifying assumptions, paradoxes, flaws in logic)
+   - Paragraph Summary / Completion
+   - Technical Communication & Precision (eliminating ambiguity, grammatical parallelism, concise executive phrasing)
+2. In each question, provide 4 options where exactly one is correct.`;
+  }
 
-Topic / Description:
-${description}
+  prompt += `
 
-Difficulty:
-${d}
-
-Style / Theme:
-${style}
-
-Rules:
+RULES FOR JSON:
 1. Return ONLY valid JSON.
-2. Do not include markdown.
-3. Do not include explanations.
-4. Every sentence must be natural, everyday Hinglish.
-5. Sentences must relate to the description above.
-6. Do NOT include English translations of the sentences.
-7. Make all sentences unique.
-8. Avoid multi-line sentences.
+2. Do not include markdown code block syntax (like \`\`\`json).
+3. Do not include explanations in this JSON response.
+4. If multi-line content or code exists, keep it inside strings using \\n.
+5. correctOption must be an integer from 1 to 4.
 
-Return:
+RETURN IN THIS EXACT JSON FORMAT:
 {
-  "title": "Hinglish Sentences Title",
-  "sentences": [
+  "title": "${mode} Practice: ${topic}",
+  "type": "${isRC ? "rc" : "va"}",
+  ${isRC ? '"passage": "Full passage text here...",' : ""}
+  "questions": [
     {
-      "sentenceNo": 1,
-      "sentence": "Aaj bahut thand hai, chai peelo."
+      "questionNo": 1,
+      "question": "Question text here",
+      "options": [
+        "A) Option A text",
+        "B) Option B text",
+        "C) Option C text",
+        "D) Option D text"
+      ],
+      "correctOption": 1,
+      "concept": "Specific concept tested (e.g. Primary Purpose, Inferences, Logical Flow, Parallelism)"
     }
   ]
 }`;
 
   copyText(prompt).then((ok) => {
     showToast(
-      ok ? "Hinglish prompt copied! Paste it into your favorite LLM." : "Copy failed — please copy the prompt manually.",
+      ok ? "VARC Practice prompt copied! Paste it into your LLM." : "Copy failed — please copy manually.",
       ok ? "success" : "error"
     );
   });
 }
 
-function loadHinglish() {
+function loadPractice() {
+  let rawText = jsonInput.value.trim();
+  if (!rawText) {
+    showToast("Please paste the practice JSON first.", "error");
+    return;
+  }
+
+  if (rawText.startsWith("```")) {
+    rawText = rawText.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+  }
+
   try {
-    hinglishData = JSON.parse(jsonInput.value);
+    practiceData = JSON.parse(rawText);
   } catch (error) {
-    showToast("Invalid JSON. Please check what you pasted.", "error");
+    showToast("Invalid JSON. Please ensure valid JSON without markdown wrapping.", "error");
     return;
   }
 
-  if (!hinglishData || !Array.isArray(hinglishData.sentences) || hinglishData.sentences.length === 0) {
-    showToast("Invalid format — expected a JSON object with a \"sentences\" array.", "error");
+  if (!practiceData || !Array.isArray(practiceData.questions) || practiceData.questions.length === 0) {
+    showToast("Invalid format — expected a JSON object with a 'questions' array.", "error");
     return;
   }
 
-  translations = [];
-  feedbackData = null;
+  testSubmitted = false;
   result.innerHTML = "";
-  feedbackContainer.innerHTML = "";
-  feedbackJsonCard.classList.add("hidden");
+  feedbackViewArea.innerHTML = "";
+  feedbackPasteCard.classList.add("hidden");
 
-  sentencesContainer.innerHTML = `<h2>${escapeHtml(hinglishData.title || "Hinglish Sentences")}</h2>`;
-
-  hinglishData.sentences.forEach((s, i) => {
-    sentencesContainer.innerHTML += `
-      <div class="question translation-item">
-        <h3>Sentence ${escapeHtml(String(s.sentenceNo ?? i + 1))}</h3>
-        <div class="question-text">${escapeHtml(s.sentence || "")}</div>
-        <label for="translation-${i}" class="answer-label">Your English Translation</label>
-        <textarea
-          id="translation-${i}"
-          class="answer-input"
-          placeholder="Translate this sentence into correct English..."
-        ></textarea>
+  // Render Passage if present
+  if (practiceData.passage) {
+    passageContainer.innerHTML = `
+      <div class="rc-passage-card">
+        <div class="rc-passage-title">📖 Reading Comprehension Passage</div>
+        <div class="rc-passage-body">${escapeHtml(practiceData.passage)}</div>
       </div>
     `;
+    passageContainer.classList.remove("hidden");
+  } else {
+    passageContainer.innerHTML = "";
+    passageContainer.classList.add("hidden");
+  }
+
+  // Render Questions
+  questionsContainer.innerHTML = `<h2>${escapeHtml(practiceData.title || "Verbal Ability Practice")}</h2>`;
+
+  practiceData.questions.forEach((q, i) => {
+    let html = `
+      <div class="question">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3>Question ${q.questionNo || i + 1}</h3>
+          ${q.concept ? `<span class="concept-tag">${escapeHtml(q.concept)}</span>` : ""}
+        </div>
+        <div class="question-text">${escapeHtml(q.question)}</div>
+    `;
+
+    if (Array.isArray(q.options)) {
+      q.options.forEach((opt, j) => {
+        html += `
+          <label class="option">
+            <input type="radio" name="pq${i}" value="${j + 1}">
+            <span class="option-content">
+              <b>${String.fromCharCode(65 + j)}.</b> <span class="option-text">${escapeHtml(opt)}</span>
+            </span>
+          </label>
+        `;
+      });
+    }
+
+    html += `<div class="feedback"></div></div>`;
+    questionsContainer.innerHTML += html;
   });
 
-  translationSection.classList.remove("hidden");
-  copyTranslationPromptBtn.classList.remove("hidden");
+  submitArea.innerHTML = `<button id="submitTestBtn">Submit Test</button>`;
+  document.getElementById("submitTestBtn").addEventListener("click", submitTest);
+
+  practiceArea.classList.remove("hidden");
   updateStep(2);
-  window.scrollTo({ top: translationSection.offsetTop - 20, behavior: "smooth" });
-  showToast(`${hinglishData.sentences.length} Hinglish sentence(s) loaded! Translate each one to English.`);
+  window.scrollTo({ top: practiceArea.offsetTop - 20, behavior: "smooth" });
+  showToast(`${practiceData.questions.length} question(s) loaded! Read and answer.`);
 }
 
-function copyTranslationPrompt() {
-  if (!hinglishData || !Array.isArray(hinglishData.sentences)) {
-    showToast("Generate Hinglish sentences first.", "error");
-    return;
-  }
+function submitTest() {
+  if (testSubmitted) return;
+  testSubmitted = true;
 
-  translations = hinglishData.sentences.map((s, i) => ({
-    sentenceNo: s.sentenceNo ?? i + 1,
-    hinglishSentence: s.sentence || "",
-    userTranslation: document.getElementById(`translation-${i}`)?.value.trim() || ""
-  }));
+  let score = 0;
 
-  const empty = translations.filter((t) => !t.userTranslation);
-  if (empty.length > 0) {
-    showToast(`Please translate ${empty.length} sentence(s) before copying the response prompt.`, "error");
-    return;
-  }
+  document.querySelectorAll("#questionsContainer .question").forEach((div, i) => {
+    const q = practiceData.questions[i];
+    const labels = div.querySelectorAll(".option");
+    const feedback = div.querySelector(".feedback");
 
-  const prompt = `You are an expert English tutor for Hindi speakers learning English.
+    labels.forEach((l) => l.classList.remove("correct-option", "wrong-option"));
+    feedback.innerHTML = "";
 
-Below are Hinglish sentences and the user's English translations of them. Evaluate each translation carefully.
+    const selected = document.querySelector(`input[name="pq${i}"]:checked`);
 
-Rules:
-1. Return ONLY valid JSON.
-2. Do not include markdown.
-3. Do not include any text outside JSON.
-4. Provide feedback for EVERY sentence.
-5. Point out grammar mistakes, incorrect word choices, unnatural phrasing, missing or extra words, and punctuation issues.
-6. Provide a correct, natural English translation for each sentence.
-7. Give one practical tip the user can apply immediately.
-8. Be encouraging — also mention what the user did well.
-
-User's translations:
-${JSON.stringify(translations, null, 2)}
-
-Return JSON in this exact structure:
-{
-  "title": "English Learning Feedback",
-  "overallFeedback": "Short overall feedback for the user",
-  "results": [
-    {
-      "sentenceNo": 1,
-      "hinglishSentence": "Original Hinglish sentence",
-      "userTranslation": "User's translation",
-      "correctTranslation": "Correct natural English translation",
-      "mistakes": "Detailed explanation of the mistakes",
-      "improvement": "How to improve this sentence"
+    if (selected) {
+      const selectedVal = Number(selected.value);
+      if (selectedVal === q.correctOption) {
+        score++;
+        labels[selectedVal - 1].classList.add("correct-option");
+        feedback.innerHTML = `<p class="correct">✔ Correct</p>`;
+      } else {
+        labels[selectedVal - 1].classList.add("wrong-option");
+        if (labels[q.correctOption - 1]) {
+          labels[q.correctOption - 1].classList.add("correct-option");
+        }
+        feedback.innerHTML = `
+          <p class="wrong">✘ Wrong</p>
+          <p class="correct">Correct Answer: ${escapeHtml(q.options[q.correctOption - 1] || "")}</p>
+        `;
+      }
+    } else {
+      if (labels[q.correctOption - 1]) {
+        labels[q.correctOption - 1].classList.add("correct-option");
+      }
+      feedback.innerHTML = `
+        <p class="wrong">Not Attempted</p>
+        <p class="correct">Correct Answer: ${escapeHtml(q.options[q.correctOption - 1] || "")}</p>
+      `;
     }
-  ]
-}`;
+
+    div.querySelectorAll("input").forEach((inp) => (inp.disabled = true));
+  });
+
+  result.innerHTML = `🎯 Final Score: ${score} / ${practiceData.questions.length}`;
+
+  submitArea.innerHTML = `
+    <div class="action-buttons">
+      <button id="copyVARCFeedbackPromptBtn">📋 Copy Concept & Knowledge Gap Prompt</button>
+      <button id="reloadPracticeBtn" class="secondary-btn">Load New Practice</button>
+    </div>
+  `;
+
+  document
+    .getElementById("copyVARCFeedbackPromptBtn")
+    .addEventListener("click", copyVARCFeedbackPrompt);
+  document
+    .getElementById("reloadPracticeBtn")
+    .addEventListener("click", resetApp);
+
+  feedbackPasteCard.classList.remove("hidden");
+  updateStep(3);
+  window.scrollTo({ top: result.offsetTop - 20, behavior: "smooth" });
+}
+
+function copyVARCFeedbackPrompt() {
+  if (!practiceData || !Array.isArray(practiceData.questions)) return;
+
+  const missedQuestions = [];
+
+  practiceData.questions.forEach((q, i) => {
+    const selected = document.querySelector(`input[name="pq${i}"]:checked`);
+    let userAnswer = "Not Attempted";
+    let wasCorrect = false;
+
+    if (selected) {
+      const selectedVal = Number(selected.value);
+      userAnswer = q.options[selectedVal - 1] || "Option " + selectedVal;
+      wasCorrect = selectedVal === q.correctOption;
+    }
+
+    if (!wasCorrect) {
+      missedQuestions.push({
+        questionNo: q.questionNo || i + 1,
+        question: q.question,
+        userAnswer,
+        correctAnswer: q.options[q.correctOption - 1] || "Option " + q.correctOption,
+        concept: q.concept || "Verbal / Reading Comprehension"
+      });
+    }
+  });
+
+  const title = practiceData.title || "VARC Practice";
+
+  if (missedQuestions.length === 0) {
+    const prompt = `I completed the practice set on "${title}" with 100% accuracy.
+Please provide a single, sophisticated synthesis of advanced verbal nuance, critical reading tactics, and high-level rhetorical frameworks to further refine my comprehension for CAT and executive tech communication.`;
+    copyText(prompt).then((ok) => {
+      showToast(
+        ok ? "100% score prompt copied! Paste into LLM for advanced refinement." : "Copy failed.",
+        ok ? "success" : "error"
+      );
+    });
+    return;
+  }
+
+  let prompt = `You are a master CAT VARC mentor and executive tech communication coach.
+
+I just completed a Verbal Ability & Reading Comprehension practice set on "${title}". Below are the questions I got wrong or struggled with (out of ${practiceData.questions.length} total questions):
+
+`;
+
+  if (practiceData.passage) {
+    prompt += `PASSAGE CONTEXT (Summary):
+${practiceData.passage.slice(0, 400)}...
+
+`;
+  }
+
+  missedQuestions.forEach((item) => {
+    prompt += `Question ${item.questionNo} [Concept: ${item.concept}]:
+${item.question}
+My Answer: ${item.userAnswer}
+Correct Answer: ${item.correctAnswer}
+
+`;
+  });
+
+  prompt += `CRITICAL INSTRUCTIONS FOR YOUR FEEDBACK:
+1. Single Unified Masterclass Response: Provide your entire feedback as ONE cohesive, unified master response. Do NOT output fragmented, isolated feedback for each question separately.
+2. Teach the Concepts Forgotten / Rules Missed (Don't just point out mistakes):
+   - Analyze the underlying reading comprehension principles, critical reasoning frameworks, or verbal/grammatical rules that I failed to apply across these questions.
+   - Deeply explain each forgotten concept from first principles:
+     * If Reading Comprehension: Explain how to accurately infer the author's primary argument, dissect tone/attitude without projecting assumptions, and spot CAT distractor traps (e.g. extreme language, scope distortion, reverse causality).
+     * If Para Jumbles / Sentence Order: Explain transition markers, mandatory pairs, antecedent-pronoun consistency, and logical flow.
+     * If Tech Communication / Grammar: Explain the rules of precision, parallelism, dangling modifiers, eliminating ambiguity, and concise corporate technical writing.
+3. Diagnostic Analysis of My Thinking:
+   - Explain why my chosen answers were tempting distractors and what cognitive bias, misinterpretation, or rush led to selecting them.
+4. Unified Actionable Cheat-Sheet:
+   - Conclude with a clear bulleted cheat-sheet of 3-5 golden rules and mental checklists to remember so I master these concepts and never make these mistakes again in the CAT exam or tech workplace.`;
 
   copyText(prompt).then((ok) => {
-    if (!ok) {
-      showToast("Copy failed — please copy the response prompt manually.", "error");
-      return;
-    }
-    feedbackJsonCard.classList.remove("hidden");
-    updateStep(3);
-    window.scrollTo({ top: feedbackJsonCard.offsetTop - 20, behavior: "smooth" });
-    showToast("Response prompt copied! Paste it into the LLM, then paste the feedback JSON below.");
+    showToast(
+      ok
+        ? "Concept & Knowledge Gap prompt copied! Paste into your LLM for a unified masterclass."
+        : "Copy failed — please copy manually.",
+      ok ? "success" : "error"
+    );
   });
 }
 
 function renderFeedback() {
-  if (!hinglishData || !Array.isArray(hinglishData.sentences)) {
-    showToast("Generate Hinglish sentences first.", "error");
+  const text = feedbackTextInput.value.trim();
+  if (!text) {
+    showToast("Please paste the AI feedback first.", "error");
     return;
   }
 
-  try {
-    feedbackData = JSON.parse(feedbackJsonInput.value);
-  } catch (error) {
-    showToast("Invalid feedback JSON. Please check what you pasted.", "error");
-    return;
-  }
+  feedbackViewArea.innerHTML = `
+    <div class="unified-feedback-card">
+      <h2>📚 AI Conceptual Masterclass & Verbal Mastery Guide</h2>
+      <div class="unified-feedback-body">${formatFeedbackText(text)}</div>
+    </div>
+  `;
 
-  if (!feedbackData || !Array.isArray(feedbackData.results) || feedbackData.results.length === 0) {
-    showToast("Invalid feedback format — expected a JSON object with a \"results\" array.", "error");
-    return;
-  }
-
-  feedbackContainer.innerHTML = `<h2>${escapeHtml(feedbackData.title || "English Learning Feedback")}</h2>`;
-
-  feedbackData.results.forEach((item) => {
-    feedbackContainer.innerHTML += `
-      <div class="question interview-feedback-card">
-        <h3>Sentence ${escapeHtml(String(item.sentenceNo ?? "?"))}</h3>
-        <div class="question-text">${escapeHtml(item.hinglishSentence || "")}</div>
-
-        <div class="feedback-block">
-          <div class="feedback-heading">Your Translation</div>
-          <div class="answer-preview">${formatMultilineText(item.userTranslation || "No answer provided.")}</div>
-        </div>
-
-        <div class="feedback-block">
-          <div class="feedback-heading">Correct Translation</div>
-          <div class="correct-translation">${formatMultilineText(item.correctTranslation || "Not provided.")}</div>
-        </div>
-
-        <div class="feedback-block">
-          <div class="feedback-heading">Mistakes</div>
-          <div class="answer-preview">${formatMultilineText(item.mistakes || "Not provided.")}</div>
-        </div>
-
-        <div class="feedback-block">
-          <div class="feedback-heading">How to Improve</div>
-          <div class="answer-preview">${formatMultilineText(item.improvement || "Not provided.")}</div>
-        </div>
-      </div>
-    `;
-  });
-
-  result.innerHTML = "";
-  if (feedbackData.overallFeedback) {
-    result.innerHTML = `
-      <div class="overall-feedback-card">
-        <h3>Overall Feedback</h3>
-        <p>${escapeHtml(feedbackData.overallFeedback)}</p>
-      </div>
-    `;
-  }
-
-  feedbackJsonCard.classList.add("hidden");
-  updateStep(3);
-  window.scrollTo({ top: feedbackContainer.offsetTop - 20, behavior: "smooth" });
-  showToast("Feedback rendered! Review your mistakes and improvements.");
+  feedbackPasteCard.classList.add("hidden");
+  window.scrollTo({ top: feedbackViewArea.offsetTop - 20, behavior: "smooth" });
+  showToast("Feedback rendered!");
 }
 
-function exportData() {
-  let payload;
-  let filename = "hinglish.json";
-
-  if (hinglishData && Array.isArray(hinglishData.sentences)) {
-    payload = JSON.stringify(hinglishData, null, 2);
-    const title = (hinglishData.title || "hinglish")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-    filename = `hinglish-${title || "hinglish"}.json`;
-  } else if (jsonInput.value.trim()) {
-    payload = jsonInput.value;
-  } else {
-    showToast("Nothing to export. Paste or load Hinglish sentences first.", "error");
-    return;
-  }
-
-  downloadFile(filename, payload);
+function formatFeedbackText(text) {
+  let safe = escapeHtml(text);
+  safe = safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  safe = safe.replace(/^### (.*$)/gim, "<h4>$1</h4>");
+  safe = safe.replace(/^## (.*$)/gim, "<h3>$1</h3>");
+  safe = safe.replace(/^# (.*$)/gim, "<h3>$1</h3>");
+  safe = safe.replace(/^\s*[-*]\s+(.*$)/gim, "• $1");
+  return safe.replace(/\n/g, "<br>");
 }
 
-function handleImportFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    jsonInput.value = ev.target.result;
-    showToast("File imported! Click Generate Sentences to render it.");
-  };
-  reader.readAsText(file);
-  event.target.value = "";
-}
-
-function downloadFile(filename, content) {
-  const blob = new Blob([content], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+function resetApp() {
+  location.reload();
 }
 
 function escapeHtml(value) {
@@ -338,8 +444,4 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-}
-
-function formatMultilineText(text) {
-  return escapeHtml(String(text)).replace(/\n/g, "<br>");
 }

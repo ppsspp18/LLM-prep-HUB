@@ -6,12 +6,12 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>LLM Learning Hub - English Learner</title>
+  <title>LLM Learning Hub - CAT VARC & Tech English</title>
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
   <div class="top-nav">
-    <a href="../index.html" class="back-btn-top">← Back to Home</a>
+    <a href="../index.html" class="back-btn-top">← Back to Hub</a>
     <button id="helpBtn" class="help-btn-top">❓ How to Use</button>
   </div>
 
@@ -19,99 +19,104 @@
     <div class="step-flow">
       <div class="step active" id="step1">
         <span class="step-num">1</span>
-        <span class="step-label">Generate Hinglish Sentences</span>
+        <span class="step-label">Configure & Copy Prompt</span>
       </div>
       <div class="step" id="step2">
         <span class="step-num">2</span>
-        <span class="step-label">Translate to English</span>
+        <span class="step-label">Solve Practice</span>
       </div>
       <div class="step" id="step3">
         <span class="step-num">3</span>
-        <span class="step-label">Get Feedback</span>
+        <span class="step-label">Conceptual Feedback</span>
       </div>
     </div>
 
     <div class="card">
-      <h1>English Learner</h1>
-      <p class="template-hint">Practice translating Hinglish sentences into proper English and get AI-powered corrections and improvement tips.</p>
+      <h1>Verbal Ability & Reading Comprehension</h1>
+      <p class="template-hint">Targeted practice for the CAT VARC section and professional tech job communication. Master inference, dense reading, para jumbles, critical reasoning, and technical writing precision.</p>
 
-      <div class="input-group-aesthetic">
-        <label for="description"><span>✍️</span> What to Generate</label>
-        <textarea id="description" placeholder="Describe what sentences to generate, e.g. morning routine, ordering food at a restaurant, travel phrases, office conversations, talking to a shopkeeper..."></textarea>
+      <label>Practice Mode</label>
+      <div class="pill-group" id="practiceTypeGroup">
+        <button type="button" class="pill-btn active" data-value="Reading Comprehension (RC)">Reading Comprehension (RC)</button>
+        <button type="button" class="pill-btn" data-value="Para Jumbles & Sentence Order">Para Jumbles</button>
+        <button type="button" class="pill-btn" data-value="Critical Reasoning & Inferences">Critical Reasoning</button>
+        <button type="button" class="pill-btn" data-value="Tech Communication & Precision">Tech Job Communication</button>
+        <button type="button" class="pill-btn" data-value="Mixed VARC Practice">Mixed VARC</button>
+      </div>
+      <input type="hidden" id="practiceType" value="Reading Comprehension (RC)">
+
+      <label>Target Level & Context</label>
+      <div class="pill-group" id="targetLevelGroup">
+        <button type="button" class="pill-btn active" data-value="CAT Exam Standard">CAT Exam Standard</button>
+        <button type="button" class="pill-btn" data-value="Tech Job Professional">Tech Job Professional</button>
+        <button type="button" class="pill-btn" data-value="Advanced Executive">Advanced Executive</button>
+      </div>
+      <input type="hidden" id="targetLevel" value="CAT Exam Standard">
+
+      <label for="topic">Passage / Focus Theme (Optional)</label>
+      <input type="text" id="topic" placeholder="e.g. Distributed Systems & Cloud, Market Economics, AI Philosophy, Architecture RFCs">
+      <div class="suggestion-chips">
+        <button type="button" class="chip" onclick="setTopic('Distributed Systems & Cloud Computing')">Tech & Systems</button>
+        <button type="button" class="chip" onclick="setTopic('Economics & Corporate Strategy')">Economics & Business</button>
+        <button type="button" class="chip" onclick="setTopic('Cognitive Science & AI Ethics')">AI & Philosophy</button>
+        <button type="button" class="chip" onclick="setTopic('Engineering Leadership & Technical RFCs')">Tech Leadership</button>
       </div>
 
-      <div class="topic-concept-grid">
+      <div class="two-col-grid" style="margin-top: 14px;">
         <div>
-          <label for="numSentences">Number of Sentences</label>
-          <input type="number" id="numSentences" value="8" min="1" max="50">
+          <label for="numQuestions">Number of Questions</label>
+          <input type="number" id="numQuestions" value="4" min="1" max="20">
         </div>
         <div>
-          <label for="difficulty">Difficulty</label>
-          <select id="difficulty">
-            <option>Easy</option>
-            <option selected>Medium</option>
-            <option>Hard</option>
-          </select>
+          <label for="additionalDescription">Additional Focus (optional)</label>
+          <input type="text" id="additionalDescription" placeholder="e.g. author tone, assumptions, ambiguity elimination...">
         </div>
       </div>
 
-      <label for="style">Style / Theme</label>
-      <select id="style">
-        <option>Everyday Conversation</option>
-        <option>Casual & Fun</option>
-        <option>Formal & Polite</option>
-        <option>Business / Office</option>
-        <option>Travel</option>
-        <option>Food & Restaurants</option>
-        <option>Shopping</option>
-      </select>
-      <p class="template-hint">Add your own description above for complete control over what the LLM generates.</p>
-
-      <button id="copyPromptBtn">📋 Copy Hinglish Prompt</button>
+      <button id="copyPromptBtn">📋 Copy Practice Prompt</button>
     </div>
 
     <div class="card">
-      <h2>Paste Hinglish Sentences JSON</h2>
-      <textarea id="jsonInput" placeholder='Paste the Hinglish sentences JSON returned by the LLM here...'></textarea><br>
+      <h2>Paste Practice JSON</h2>
+      <textarea id="jsonInput" placeholder="Paste the VARC practice JSON returned by your LLM here..."></textarea>
       <div class="action-buttons">
-        <button id="generateBtn">Generate Sentences</button>
-        <button id="exportBtn" class="secondary-btn">⬇ Export JSON</button>
-        <button id="importBtn" class="secondary-btn">⬆ Import JSON</button>
+        <button id="generateBtn">Generate Practice</button>
       </div>
-      <input type="file" id="importFileInput" accept=".json,application/json" class="hidden">
     </div>
 
-    <div class="card hidden" id="translationSection">
-      <h2>Translate Each Sentence to English</h2>
-      <p class="template-hint">Read each Hinglish sentence below and type its correct English translation. Then copy the response prompt for AI feedback.</p>
-      <div id="sentences"></div>
-      <button id="copyTranslationPromptBtn" class="hidden">📋 Copy Response Prompt</button>
+    <div id="practiceArea" class="hidden">
+      <div id="passageContainer"></div>
+      <div id="questionsContainer"></div>
+      <div id="submitArea"></div>
+      <div id="result"></div>
     </div>
 
-    <div class="card hidden" id="feedbackJsonCard">
-      <h2>Paste Feedback JSON</h2>
-      <textarea id="feedbackJsonInput" placeholder="Paste the AI feedback JSON here..."></textarea><br>
-      <button id="showFeedbackBtn">Show Feedback</button>
+    <div id="feedbackPasteCard" class="card hidden">
+      <h2>Paste AI Conceptual Feedback (Optional)</h2>
+      <p class="template-hint">After copying the concept & knowledge gap prompt to your LLM, paste the AI's single masterclass response here to view it cleanly formatted.</p>
+      <textarea id="feedbackTextInput" placeholder="Paste the AI's comprehensive conceptual feedback here..."></textarea>
+      <div class="action-buttons">
+        <button id="showFeedbackBtn">Show Feedback</button>
+      </div>
     </div>
 
-    <div id="result"></div>
-    <div id="feedback"></div>
+    <div id="feedbackViewArea"></div>
   </div>
 
   <div id="helpModal" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
-        <h2>How to Use English Learner</h2>
+        <h2>How to Use English / VARC Hub</h2>
         <button id="closeModalBtn" class="modal-close-btn">&times;</button>
       </div>
       <div class="modal-body">
         <ol>
-          <li>Describe what sentences you want in <strong>What to Generate</strong> (e.g. daily routine, restaurant, travel).</li>
-          <li>Click <strong>📋 Copy Hinglish Prompt</strong> and paste it into any LLM (ChatGPT, Claude, Gemini) to generate Hinglish sentences.</li>
-          <li>Paste the returned JSON into the <strong>Paste Hinglish Sentences JSON</strong> box and click <strong>Generate Sentences</strong>.</li>
-          <li>Type the correct <strong>English translation</strong> for each Hinglish sentence.</li>
-          <li>Click <strong>📋 Copy Response Prompt</strong>, paste it into the LLM to get mistakes & improvements.</li>
-          <li>Paste the returned feedback JSON and click <strong>Show Feedback</strong> to see your mistakes and how to improve.</li>
+          <li>Select your <strong>Practice Mode</strong> (e.g. Reading Comprehension, Para Jumbles, Tech Job Communication) and target level.</li>
+          <li>Click <strong>📋 Copy Practice Prompt</strong> and paste it into any LLM (ChatGPT, Claude, Gemini).</li>
+          <li>Paste the returned JSON into <strong>Paste Practice JSON</strong> and click <strong>Generate Practice</strong>.</li>
+          <li>Read the passage (for RC) and select your answers for each question.</li>
+          <li>Click <strong>Submit Test</strong> to view your score and detailed answer keys.</li>
+          <li>Click <strong>📋 Copy Concept & Knowledge Gap Prompt</strong> — the LLM will give you a single cohesive response deeply explaining the reading, reasoning, and grammar concepts you missed.</li>
         </ol>
       </div>
     </div>

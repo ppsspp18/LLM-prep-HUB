@@ -1,45 +1,57 @@
-# LLM Quiz Generator
+# LLM Prep Hub: Tech Jobs & CAT VARC
 
-A lightweight, static HTML/CSS/JS tool for generating and taking quizzes or interview-style Q&A sessions using any LLM (ChatGPT, Claude, Gemini, etc.) as the question/answer engine.
+A lightweight, zero-dependency static web application designed to help learners prepare for **Top Tech Jobs** and the **CAT Exam (VARC Section)** using any LLM (ChatGPT, Claude, Gemini) as the reasoning engine without requiring API keys.
 
-## How it works
+---
 
-1. **Configure** your topic, concept, difficulty, number of questions, and (optionally) any additional description/instructions.
-2. Click **📋 Copy Prompt** — this copies a ready-made prompt to your clipboard.
-3. Paste that prompt into your favorite LLM chat.
-4. Copy the JSON the LLM returns and paste it into the **Paste JSON Response** box.
-5. Click **Generate** to render the quiz or interview questions.
-6. For MCQ quizzes: answer the questions and click **Submit Quiz** to see your score.
-   - Use **📋 Copy Response for Knowledge Gap** to copy a prompt (containing only the questions you got wrong or skipped) back to the LLM for a focused theory explanation of your mistakes.
- 7. For Interview mode: type your answers, then use **📋 Copy Feedback Prompt** to get AI-graded feedback, and paste the returned JSON to view detailed feedback per question.
+## 🎨 Theme Palette
 
+Built with an elegant, focused, high-contrast light theme:
+- **Background**: `#FBF8F3` (warm ivory)
+- **Surface**: `#F1ECE4` (warm stone)
+- **Primary**: `#5C534A` (slate charcoal / deep taupe)
+- **Accent**: `#C8BBA8` (soft sand border & accent)
+- **Text**: `#2A2520` (high-contrast dark espresso)
 
-## Features
+---
 
-- MCQ quiz mode and open-ended Interview Q&A mode
-- Optional 80/20 (Pareto) rule toggle to focus on high-yield concepts
-- Optional additional description field for custom instructions to the LLM
-- Proper rendering of multi-line questions/options (e.g. code snippets) using `\n` in the JSON
-- Knowledge-gap prompt generation focused only on missed questions, requesting theory explanations
-- Fully responsive UI
+## 🚀 Modes
 
-## Running locally
+### 1. 📝 Technical Quiz Mode (`quiz/quiz.html`)
+- Generate targeted technical multiple-choice questions on any engineering subject (System Design, DSA, Operating Systems, Networking, Cloud).
+- Simple pill-based difficulty selection (no `<select>` dropdowns).
+- Instant scoring and answer key breakdown.
+- **Unified Concept Feedback**: Generates a prompt instructing the LLM to output a **single comprehensive response** covering all missed questions, explaining forgotten theory from first principles with mental models and a revision cheat-sheet.
 
-Because the app uses the Clipboard API, it works best served over `http://localhost` or `https://`, not opened directly as a `file://` URL in some browsers.
+### 2. 🎤 Tech Interview Mode (`interview/interview.html`)
+- Practice realistic open-ended technical and architectural interview questions (Junior, Mid-Level, Senior/Staff).
+- Type comprehensive answers detailing trade-offs, architecture, and edge cases.
+- **Unified Interview Evaluation**: Requests a single holistic critique from the LLM that diagnoses conceptual blind spots, missing non-functional requirements, and architectural frameworks.
+
+### 3. 📖 CAT VARC & Tech English Mode (`english/english.html`)
+- Completely redesigned from translation to **Verbal Ability & Reading Comprehension**:
+  - **Reading Comprehension (RC)**: Dense, analytical passages (350-550 words) on technology, economics, AI ethics, and cognitive science with CAT-standard inference and central thesis questions.
+  - **Verbal Ability**: Para Jumbles (sentence rearrangement), Critical Reasoning, Paragraph Summary, and Technical Communication & Writing Precision.
+  - **Single Masterclass Feedback**: Synthesizes all mistakes into fundamental reading/reasoning principles forgotten, distractor traps to avoid, and golden rules for the CAT exam and the tech workplace.
+
+---
+
+## ⚡ How It Works
+
+1. **Configure & Copy Prompt**: Set your topic, difficulty, and question count, then click **📋 Copy Prompt**.
+2. **Generate with Any LLM**: Paste the prompt into ChatGPT, Claude, Gemini, or DeepSeek.
+3. **Render in App**: Paste the returned JSON into the app to take the test or answer questions.
+4. **Learn from Forgotten Concepts**: Click **📋 Copy Concept & Knowledge Gap Prompt** to get a single unified masterclass explanation directly addressing your conceptual gaps.
+
+---
+
+## 💻 Running Locally
+
+Serve over a local HTTP server:
 
 ```bash
+# Python 3
 python -m http.server 5500
 ```
 
-Then open `http://localhost:5500` in your browser.
-
-> **Tip:** If you update `script.js`/`styles.css` while the server is running and don't see changes, do a hard refresh (Ctrl+Shift+R / Cmd+Shift+R) — some browsers aggressively cache static files served by simple dev servers.
-
-## Project structure
-
-```
-index.html    - App markup/UI
-script.js     - App logic (prompt generation, quiz rendering, scoring, speech input)
-styles.css    - Styling
-README.md     - This file
-```
+Then visit [http://localhost:5500](http://localhost:5500) in your browser.

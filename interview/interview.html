@@ -6,101 +6,81 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>LLM Quiz Generator - Interview Mode</title>
+  <title>LLM Learning Hub - Technical Interview Practice</title>
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
   <div class="top-nav">
-    <a href="../index.html" class="back-btn-top">← Back to Home</a>
+    <a href="../index.html" class="back-btn-top">← Back to Hub</a>
     <button id="helpBtn" class="help-btn-top">❓ How to Use</button>
   </div>
 
   <div class="container">
     <div class="card">
-      <h1>LLM Interview Generator</h1>
+      <h1>Technical Interview Generator</h1>
+      <p class="template-hint">Practice open-ended engineering interview questions tailored for top tech jobs. Get unified conceptual feedback to bridge theory gaps.</p>
       
-      <div class="topic-concept-grid">
-        <div class="input-group-aesthetic">
-          <label for="topic"><span>📚</span> Topic</label>
-          <div class="input-with-icon">
-            <span class="input-icon">🔍</span>
-            <input id="topic" placeholder="e.g. Machine Learning">
-          </div>
+      <div class="two-col-grid">
+        <div>
+          <label for="topic">Role / Subject</label>
+          <input type="text" id="topic" placeholder="e.g. Backend Engineer, Full Stack, SRE">
           <div class="suggestion-chips">
-            <button type="button" class="chip" onclick="setTopic('Machine Learning')">Machine Learning</button>
+            <button type="button" class="chip" onclick="setTopic('Backend Engineering')">Backend</button>
             <button type="button" class="chip" onclick="setTopic('System Design')">System Design</button>
-            <button type="button" class="chip" onclick="setTopic('Web Development')">Web Dev</button>
+            <button type="button" class="chip" onclick="setTopic('Distributed Systems')">Distributed Systems</button>
           </div>
         </div>
 
-        <div class="input-group-aesthetic">
-          <label for="concept"><span>💡</span> Concept</label>
-          <div class="input-with-icon">
-            <span class="input-icon">🎯</span>
-            <input id="concept" placeholder="e.g. Linear Regression">
-          </div>
+        <div>
+          <label for="concept">Core Focus</label>
+          <input type="text" id="concept" placeholder="e.g. Microservices, Database Internals">
           <div class="suggestion-chips">
-            <button type="button" class="chip" onclick="setConcept('Linear Regression')">Linear Regression</button>
-            <button type="button" class="chip" onclick="setConcept('Microservices')">Microservices</button>
-            <button type="button" class="chip" onclick="setConcept('React Hooks')">React Hooks</button>
+            <button type="button" class="chip" onclick="setConcept('Microservices & Messaging')">Microservices</button>
+            <button type="button" class="chip" onclick="setConcept('Database Sharding & Replication')">Databases</button>
+            <button type="button" class="chip" onclick="setConcept('API Design & Security')">API Security</button>
           </div>
         </div>
       </div>
       
-      <label for="difficulty">Difficulty</label>
-      <select id="difficulty">
-        <option>Easy</option>
-        <option>Medium</option>
-        <option>Hard</option>
-      </select>
+      <label>Difficulty</label>
+      <div class="pill-group" id="difficultyGroup">
+        <button type="button" class="pill-btn" data-value="Easy">Junior</button>
+        <button type="button" class="pill-btn active" data-value="Medium">Mid-Level</button>
+        <button type="button" class="pill-btn" data-value="Hard">Senior / Staff</button>
+      </div>
+      <input type="hidden" id="difficulty" value="Medium">
       
       <label for="numQuestions">Number of Questions</label>
-      <input type="number" id="numQuestions" value="10" min="1" max="50">
+      <input type="number" id="numQuestions" value="5" min="1" max="25">
       
-      <label for="additionalDescription">Additional Description (optional)</label>
-      <textarea id="additionalDescription" placeholder="Any extra instructions or context for the question generator (e.g. focus areas, exclusions, style preferences)..."></textarea>
-
-      <label for="promptTemplate">Prompt Template</label>
-      <select id="promptTemplate">
-        <option value="standard">Standard</option>
-        <option value="deepDive">Deep Dive Technical</option>
-        <option value="fundamentals">Conceptual Fundamentals</option>
-        <option value="codeHeavy">Code-Heavy</option>
-        <option value="realWorld">Real-World Scenarios</option>
-        <option value="rapidFire">Rapid Fire</option>
-        <option value="systemDesign">System Design</option>
-        <option value="behavioral">Behavioral / STAR</option>
-      </select>
-      <p class="template-hint">Templates add focus instructions to the generated prompt. You can still add custom instructions above.</p>
-
-      <div class="checkbox-group">
-        <input type="checkbox" id="paretoRule">
-        <label for="paretoRule">Apply 80/20 Rule (Focus on most common/core concepts)</label>
-      </div>
+      <label for="additionalDescription">Additional Focus (optional)</label>
+      <textarea id="additionalDescription" style="min-height: 80px;" placeholder="Target company type, specific frameworks, scenario constraints, or architecture styles..."></textarea>
 
       <button id="copyPromptBtn">📋 Copy Prompt</button>
     </div>
 
     <div class="card">
-      <h2 id="jsonSectionTitle">Paste Interview Questions JSON</h2>
-      <textarea id="jsonInput" placeholder="Paste interview questions JSON here..."></textarea><br>
+      <h2>Paste Interview Questions JSON</h2>
+      <textarea id="jsonInput" placeholder="Paste the interview questions JSON returned by your LLM here..."></textarea>
       <div class="action-buttons">
         <button id="generateQuizBtn">Generate Interview Questions</button>
-        <button id="exportQuizBtn" class="secondary-btn">⬇ Export JSON</button>
-        <button id="importQuizBtn" class="secondary-btn">⬆ Import JSON</button>
       </div>
-      <input type="file" id="importFileInput" accept=".json,application/json" class="hidden">
     </div>
 
     <div id="quiz"></div>
     <div id="submitArea"></div>
     <div id="result"></div>
     
-    <div id="feedbackJsonCard" class="card hidden">
-      <h2>Paste Interview Feedback JSON</h2>
-      <textarea id="feedbackJsonInput" placeholder="Paste AI feedback JSON here..."></textarea><br>
-      <button id="showFeedbackBtn">Show Interview Feedback</button>
+    <div id="feedbackPasteCard" class="card hidden">
+      <h2>Paste AI Feedback (Optional)</h2>
+      <p class="template-hint">After copying the feedback prompt to your LLM, paste the AI's single evaluation response here to display it.</p>
+      <textarea id="feedbackTextInput" placeholder="Paste the AI's comprehensive conceptual evaluation and feedback here..."></textarea>
+      <div class="action-buttons">
+        <button id="showFeedbackBtn">Show Interview Feedback</button>
+      </div>
     </div>
+
+    <div id="feedbackViewArea"></div>
   </div>
 
   <div id="helpModal" class="modal-overlay">
@@ -111,11 +91,12 @@
       </div>
       <div class="modal-body">
         <ol>
-          <li>Fill in your desired <strong>Topic</strong>, <strong>Concept</strong>, <strong>Difficulty</strong>, and number of questions. Optionally pick a <strong>Prompt Template</strong>.</li>
-          <li>Click <strong>📋 Copy Prompt</strong> and paste it into any LLM to generate interview questions JSON.</li>
-          <li>Paste the resulting JSON into the box below and click <strong>Generate Interview Questions</strong>.</li>
-          <li>Write your answers to each open-ended question.</li>
-          <li>Click <strong>📋 Copy Feedback Prompt</strong>, paste it into the LLM to grade your answers, then paste the returned feedback JSON to view detailed AI scores and feedback.</li>
+          <li>Configure your target <strong>Role</strong>, <strong>Core Focus</strong>, and difficulty level.</li>
+          <li>Click <strong>📋 Copy Prompt</strong> and paste it into an LLM (ChatGPT, Claude, Gemini) to generate open-ended questions.</li>
+          <li>Paste the returned JSON into <strong>Paste Interview Questions JSON</strong> and click <strong>Generate</strong>.</li>
+          <li>Write your answers to each technical interview question.</li>
+          <li>Click <strong>📋 Copy Comprehensive Feedback Prompt</strong> — this prompts the LLM for a single unified response that deeply explains forgotten concepts and architectural principles.</li>
+          <li>Paste the AI feedback into the box below to view it nicely formatted.</li>
         </ol>
       </div>
     </div>

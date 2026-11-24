@@ -5,10 +5,10 @@ let timeLeft = 0;
 
 const topicInput = document.getElementById("topic");
 const conceptInput = document.getElementById("concept");
-const difficultySelect = document.getElementById("difficulty");
+const difficultyInput = document.getElementById("difficulty");
+const difficultyButtons = document.querySelectorAll("#difficultyGroup .pill-btn");
 const numQuestionsInput = document.getElementById("numQuestions");
 const additionalDescriptionInput = document.getElementById("additionalDescription");
-const paretoRuleCheckbox = document.getElementById("paretoRule");
 
 const jsonInput = document.getElementById("jsonInput");
 const quizContainer = document.getElementById("quiz");
@@ -16,51 +16,30 @@ const submitArea = document.getElementById("submitArea");
 const result = document.getElementById("result");
 const copyPromptBtn = document.getElementById("copyPromptBtn");
 const generateQuizBtn = document.getElementById("generateQuizBtn");
-const promptTemplateSelect = document.getElementById("promptTemplate");
 const enableTimerCheckbox = document.getElementById("enableTimer");
 const timerMinutesInput = document.getElementById("timerMinutes");
 const timerBar = document.getElementById("timerBar");
-const exportQuizBtn = document.getElementById("exportQuizBtn");
-const importQuizBtn = document.getElementById("importQuizBtn");
-const importFileInput = document.getElementById("importFileInput");
 
-const PROMPT_TEMPLATES = {
-  standard: { label: "Standard", instructions: "" },
-  deepDive: {
-    label: "Deep Dive Technical",
-    instructions: "Focus on advanced technical depth: edge cases, trade-offs, and underlying mechanisms. Prefer questions that separate advanced learners from beginners."
-  },
-  fundamentals: {
-    label: "Conceptual Fundamentals",
-    instructions: "Focus on core concepts, definitions, intuition, and first principles. Prefer questions that establish strong foundational understanding."
-  },
-  codeHeavy: {
-    label: "Code-Heavy",
-    instructions: "Include code snippets, output prediction, bug hunting, and 'what does this code do' style questions. Keep code inside \\n escape sequences in the JSON."
-  },
-  realWorld: {
-    label: "Real-World Scenarios",
-    instructions: "Frame questions as realistic, practical scenarios or case studies that apply the concept to real production situations."
-  },
-  rapidFire: {
-    label: "Rapid Fire",
-    instructions: "Keep questions short, punchy, and quick to answer. Favor one-liner questions that test recall and speed."
-  },
-  tricky: {
-    label: "Tricky / Common Mistakes",
-    instructions: "Include tricky questions and common misconceptions. Prefer distractors that reflect typical mistakes learners make."
-  },
-  systemDesign: {
-    label: "System Design",
-    instructions: "Focus on architecture, scalability, reliability, and trade-offs. Prefer questions about designing systems or choosing between architectural approaches."
-  }
-};
+const feedbackPasteCard = document.getElementById("feedbackPasteCard");
+const feedbackTextInput = document.getElementById("feedbackTextInput");
+const renderFeedbackBtn = document.getElementById("renderFeedbackBtn");
+const feedbackViewArea = document.getElementById("feedbackViewArea");
+
+// Difficulty pill selector
+difficultyButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    difficultyButtons.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    difficultyInput.value = btn.dataset.value;
+  });
+});
 
 copyPromptBtn.addEventListener("click", copyPrompt);
 generateQuizBtn.addEventListener("click", handleGenerate);
-exportQuizBtn.addEventListener("click", exportQuiz);
-importQuizBtn.addEventListener("click", () => importFileInput.click());
-importFileInput.addEventListener("change", handleImportFile);
+if (renderFeedbackBtn) {
+  renderFeedbackBtn.addEventListener("click", renderPastedFeedback);
+}
+
 enableTimerCheckbox.addEventListener("change", () => {
   timerMinutesInput.disabled = !enableTimerCheckbox.checked;
 });
@@ -95,70 +74,52 @@ window.setConcept = function(val) {
 };
 
 function copyPrompt() {
-  const t = topicInput.value.trim();
-  const c = conceptInput.value.trim();
-  const d = difficultySelect.value;
+  const t = topicInput.value.trim() || "Computer Science Core";
+  const c = conceptInput.value.trim() || "Key Concepts";
+  const d = difficultyInput.value || "Medium";
   const num = numQuestionsInput.value || 10;
-  const usePareto = paretoRuleCheckbox.checked;
-  const additionalDescription = additionalDescriptionInput.value.trim();
+  const additional = additionalDescriptionInput.value.trim();
 
-  let rules = `1. Return ONLY valid JSON.
-2. Do not include markdown.
-3. Do not include explanations.
-4. Every question must have exactly four options.
-5. Exactly one option must be correct.
-6. correctOption must be an integer from 1 to 4.
-7. Make questions unique.
-8. Use simple English.
-9. If a question or option includes code or multi-line content, keep it inside the JSON string using \\n escape sequences (do not break the JSON with literal line breaks).`;
+  let prompt = `You are an expert technical quiz generator.
 
-  if (usePareto) {
-    rules += `\n10. Apply the 80/20 rule (Pareto principle): focus exclusively on the most frequently asked, fundamental, and high-yield questions for this topic.`;
-  }
+Generate exactly ${num} high-quality multiple-choice questions to test deep technical understanding.
 
-  let prompt = `You are an expert quiz generator.
+Topic: ${t}
+Concept: ${c}
+Difficulty: ${d}`;
 
-Generate exactly ${num} multiple-choice questions.
-
-Topic:
-${t}
-
-Concept:
-${c}
-
-Difficulty:
-${d}`;
-
-  if (additionalDescription) {
-    prompt += `\n\nAdditional Instructions:\n${additionalDescription}`;
-  }
-
-  const template = PROMPT_TEMPLATES[promptTemplateSelect.value] || PROMPT_TEMPLATES.standard;
-  if (template.instructions) {
-    prompt += `\n\nPrompt Template (${template.label}):\n${template.instructions}`;
+  if (additional) {
+    prompt += `\nAdditional Focus / Context:\n${additional}`;
   }
 
   prompt += `
 
 Rules:
-${rules}
+1. Return ONLY valid JSON.
+2. Do not include markdown code block syntax (like \`\`\`json).
+3. Do not include explanations in the JSON.
+4. Every question must have exactly four options.
+5. Exactly one option must be correct.
+6. correctOption must be an integer from 1 to 4.
+7. Focus on conceptual clarity, real-world engineering trade-offs, and common pitfalls.
+8. If code is needed, include it inside the question string using \\n escape sequences.
 
-Return:
+Return format:
 {
-  "title": "Quiz Title",
+  "title": "${t} - ${c} Quiz",
   "questions": [
     {
       "questionNo": 1,
-      "question": "Question",
-      "options": ["A", "B", "C", "D"],
-      "correctOption": 2
+      "question": "Question text here",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctOption": 1
     }
   ]
 }`;
 
   copyText(prompt).then((ok) => {
     showToast(
-      ok ? "Prompt copied! Paste it into your favorite LLM." : "Copy failed — please copy the prompt manually.",
+      ok ? "Prompt copied! Paste it into your LLM." : "Copy failed — please copy manually.",
       ok ? "success" : "error"
     );
   });
@@ -169,15 +130,26 @@ function handleGenerate() {
 }
 
 function loadQuiz() {
-  try {
-    quizData = JSON.parse(jsonInput.value);
-  } catch (error) {
-    showToast("Invalid JSON. Please check what you pasted.", "error");
+  let rawText = jsonInput.value.trim();
+  if (!rawText) {
+    showToast("Please paste the quiz JSON first.", "error");
     return;
   }
 
-  if (!quizData || !Array.isArray(quizData.questions)) {
-    showToast("Invalid quiz format — expected a JSON object with a \"questions\" array.", "error");
+  // Strip markdown code fences if LLM included them
+  if (rawText.startsWith("```")) {
+    rawText = rawText.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+  }
+
+  try {
+    quizData = JSON.parse(rawText);
+  } catch (error) {
+    showToast("Invalid JSON. Please ensure clean JSON without stray text.", "error");
+    return;
+  }
+
+  if (!quizData || !Array.isArray(quizData.questions) || quizData.questions.length === 0) {
+    showToast("Invalid quiz format — expected a JSON object with a 'questions' array.", "error");
     return;
   }
 
@@ -190,11 +162,13 @@ function loadQuiz() {
   timerBar.classList.remove("timer-warning");
 
   result.innerHTML = "";
-  quizContainer.innerHTML = `<h2>${escapeHtml(quizData.title || "Quiz")}</h2>`;
+  feedbackViewArea.innerHTML = "";
+  feedbackPasteCard.classList.add("hidden");
+  quizContainer.innerHTML = `<h2>${escapeHtml(quizData.title || "Technical Quiz")}</h2>`;
 
   quizData.questions.forEach((q, i) => {
     let html = `<div class="question">
-      <h3>Question ${q.questionNo}</h3>
+      <h3>Question ${q.questionNo || i + 1}</h3>
       <div class="question-text">${escapeHtml(q.question)}</div>`;
 
     if (!Array.isArray(q.options)) {
@@ -222,6 +196,9 @@ function loadQuiz() {
   if (enableTimerCheckbox.checked) {
     startTimer();
   }
+
+  window.scrollTo({ top: quizContainer.offsetTop - 20, behavior: "smooth" });
+  showToast(`${quizData.questions.length} questions loaded!`);
 }
 
 function submitQuiz() {
@@ -291,21 +268,24 @@ function submitQuiz() {
   result.innerHTML = `🎯 Final Score: ${score} / ${quizData.questions.length}`;
   submitArea.innerHTML = `
     <div class="action-buttons">
-      <button id="copyKnowledgeGapBtn">📋 Copy Response for Knowledge Gap</button>
-      <button id="copyAdaptiveBtn">🚀 Generate Harder Follow-up Quiz</button>
-      <button id="reloadQuizBtn">Load New Quiz</button>
+      <button id="copyKnowledgeGapBtn">📋 Copy Concept & Knowledge Gap Prompt</button>
+      <button id="copyAdaptiveBtn" class="secondary-btn">🚀 Generate Harder Follow-up Quiz</button>
+      <button id="reloadQuizBtn" class="secondary-btn">Load New Quiz</button>
     </div>
   `;
 
   document.getElementById("copyKnowledgeGapBtn").addEventListener("click", copyKnowledgeGapPrompt);
   document.getElementById("copyAdaptiveBtn").addEventListener("click", () => copyAdaptivePrompt(correctQuestions));
   document.getElementById("reloadQuizBtn").addEventListener("click", resetApp);
+
+  feedbackPasteCard.classList.remove("hidden");
+  window.scrollTo({ top: result.offsetTop - 20, behavior: "smooth" });
 }
 
 function copyKnowledgeGapPrompt() {
   if (!quizData || !Array.isArray(quizData.questions)) return;
 
-  const t = topicInput.value.trim() || "the topic";
+  const t = topicInput.value.trim() || quizData.title || "the topic";
   const c = conceptInput.value.trim() || "the core concepts";
 
   const missedQuestions = [];
@@ -315,56 +295,63 @@ function copyKnowledgeGapPrompt() {
     let userAnswer = "Not Attempted";
     let wasCorrect = false;
 
-  if (selected) {
-    const selectedValue = Number(selected.value);
-    userAnswer = q.options[selectedValue - 1];
-    wasCorrect = selectedValue === q.correctOption;
-  }
+    if (selected) {
+      const selectedValue = Number(selected.value);
+      userAnswer = q.options[selectedValue - 1] || "Selected option " + selectedValue;
+      wasCorrect = selectedValue === q.correctOption;
+    }
 
-  if (!wasCorrect) {
-    missedQuestions.push({
-      questionNo: q.questionNo,
-      question: q.question,
-      userAnswer,
-      correctAnswer: q.options[q.correctOption - 1]
-    });
-  }
-});
+    if (!wasCorrect) {
+      missedQuestions.push({
+        questionNo: q.questionNo || i + 1,
+        question: q.question,
+        userAnswer,
+        correctAnswer: q.options[q.correctOption - 1] || `Option ${q.correctOption}`
+      });
+    }
+  });
 
   if (missedQuestions.length === 0) {
-    const prompt = `I just took a multiple-choice quiz on ${t} - ${c} and answered every question correctly. Please give me a short, encouraging summary of the key concepts this quiz covered, and suggest 2-3 slightly more advanced or related topics I could explore next to deepen my understanding.`;
+    const prompt = `I took a technical quiz on ${t} - ${c} and achieved 100% correct answers.
+Please provide a single, concise synthesis of the advanced architectural nuances, edge cases, and next-level concepts I should explore to deepen my mastery.`;
     copyText(prompt).then((ok) => {
       showToast(
-        ok
-          ? "Prompt copied! (You got a perfect score, so this asks for next-step topics instead.)"
-          : "Copy failed — please copy the prompt manually.",
+        ok ? "Perfect score prompt copied! Paste into LLM for advanced deep-dive." : "Copy failed.",
         ok ? "success" : "error"
       );
     });
     return;
   }
 
-  let resultsText = `I just took a multiple-choice quiz on ${t} - ${c}. Below are ONLY the questions I got wrong or did not attempt, out of ${quizData.questions.length} total questions.\n\n`;
+  let prompt = `You are an expert technical mentor.
+
+I just took a technical quiz on "${t}" (${c}) and made mistakes on the following questions (out of ${quizData.questions.length} total):
+
+`;
 
   missedQuestions.forEach((item) => {
-    resultsText += `Q${item.questionNo}: ${item.question}\n`;
-    resultsText += `My Answer: ${item.userAnswer}\n`;
-    resultsText += `Correct Answer: ${item.correctAnswer}\n\n`;
+    prompt += `Question ${item.questionNo}: ${item.question}\n`;
+    prompt += `My Answer: ${item.userAnswer}\n`;
+    prompt += `Correct Answer: ${item.correctAnswer}\n\n`;
   });
 
-  resultsText += `Based on these mistakes, please act as an expert tutor and help me close my knowledge gaps. For each question above:
-1. Explain the underlying theory/concept in simple, clear terms.
-2. Explain specifically why my answer was wrong (if I attempted it) and why the correct answer is right.
-3. Walk through any relevant code or logic step by step where applicable.
-4. Point out common misconceptions that lead to this kind of mistake.
+  prompt += `CRITICAL INSTRUCTIONS FOR YOUR FEEDBACK:
+1. Single Unified Response: Provide your entire output as ONE cohesive, comprehensive response. Do NOT output separate, isolated answers for each question.
+2. Teach the Forgotten Concepts (Don't just point out mistakes):
+   - Identify the fundamental concepts, underlying principles, and mechanisms that I seem to have forgotten or misunderstood across these questions.
+   - Explain each forgotten concept deeply and clearly from first principles with intuitive examples and mental models.
+3. Diagnostic Pattern Analysis:
+   - Explain the thinking traps, common misconceptions, or edge-case oversights that led to these errors.
+4. Contextual Synthesis:
+   - Tie the explanations directly back to why the correct answers make architectural/logical sense and why my choices fell short.
+5. Actionable Rules to Remember:
+   - Conclude with a clear bulleted cheat-sheet of 3-5 golden rules/heuristics to master these concepts and avoid repeating these mistakes in technical interviews and production.`;
 
-Then, at the end, give a short summary of the overall concepts I should review to master this topic.`;
-
-  copyText(resultsText).then((ok) => {
+  copyText(prompt).then((ok) => {
     showToast(
       ok
-        ? "Knowledge gap prompt copied! Paste it into the LLM to get explanations focused on your mistakes."
-        : "Copy failed — please copy the prompt manually.",
+        ? "Concept & Knowledge Gap prompt copied! Paste it into your LLM for a unified explanation."
+        : "Copy failed — please copy manually.",
       ok ? "success" : "error"
     );
   });
@@ -373,41 +360,35 @@ Then, at the end, give a short summary of the overall concepts I should review t
 function copyAdaptivePrompt(correctQuestions) {
   if (!quizData || !Array.isArray(quizData.questions)) return;
 
-  const t = topicInput.value.trim() || "the topic";
+  const t = topicInput.value.trim() || quizData.title || "the topic";
   const c = conceptInput.value.trim() || "the core concepts";
-  const d = difficultySelect.value;
-  const num = numQuestionsInput.value || quizData.questions.length;
+  const d = difficultyInput.value || "Medium";
+  const num = numQuestionsInput.value || 10;
 
   const masteredList = correctQuestions
-    .map((q) => `Q${q.questionNo}: ${q.question}`)
+    .map((q, i) => `Q${q.questionNo || i + 1}: ${q.question}`)
     .join("\n");
 
-  const prompt = `You are an expert quiz generator creating an adaptive follow-up quiz.
+  const prompt = `You are an expert technical quiz generator creating an adaptive follow-up quiz.
 
-The user just completed a ${d} difficulty quiz on ${t} - ${c} and mastered the following questions:
+The user mastered the following questions on ${t} - ${c}:
+${masteredList || "Basic concepts mastered."}
 
-${masteredList}
-
-Generate exactly ${num} NEW multiple-choice questions based on the topics and concepts covered by the questions above. These follow-up questions must be meaningfully HARDER (a level above ${d} difficulty) — dig deeper into the same topics, test edge cases, subtle nuances, and require real understanding rather than recall. Do not repeat any of the questions above.
+Generate exactly ${num} NEW multiple-choice questions that are meaningfully harder (advanced depth, edge cases, trade-offs, production scenarios). Do not repeat the questions above.
 
 Rules:
 1. Return ONLY valid JSON.
-2. Do not include markdown.
-3. Do not include explanations.
-4. Every question must have exactly four options.
-5. Exactly one option must be correct.
-6. correctOption must be an integer from 1 to 4.
-7. Make questions unique.
-8. Use simple English.
-9. If a question or option includes code or multi-line content, keep it inside the JSON string using \\n escape sequences (do not break the JSON with literal line breaks).
+2. Do not include markdown code fences.
+3. Exactly four options per question, exactly one correct.
+4. correctOption must be 1 to 4.
 
 Return:
 {
-  "title": "Quiz Title",
+  "title": "${t} - Advanced Adaptive Quiz",
   "questions": [
     {
       "questionNo": 1,
-      "question": "Question",
+      "question": "Question text",
       "options": ["A", "B", "C", "D"],
       "correctOption": 2
     }
@@ -416,19 +397,49 @@ Return:
 
   copyText(prompt).then((ok) => {
     showToast(
-      ok
-        ? "Adaptive follow-up prompt copied! Paste it into the LLM, then paste the returned JSON below."
-        : "Copy failed — please copy the prompt manually.",
+      ok ? "Adaptive follow-up prompt copied! Paste it into your LLM." : "Copy failed.",
       ok ? "success" : "error"
     );
   });
+}
+
+function renderPastedFeedback() {
+  const text = feedbackTextInput.value.trim();
+  if (!text) {
+    showToast("Please paste the AI feedback text first.", "error");
+    return;
+  }
+
+  feedbackViewArea.innerHTML = `
+    <div class="unified-feedback-card">
+      <h2>🧠 AI Conceptual Feedback & Mastery Guide</h2>
+      <div class="unified-feedback-body">${formatFeedbackText(text)}</div>
+    </div>
+  `;
+
+  feedbackPasteCard.classList.add("hidden");
+  window.scrollTo({ top: feedbackViewArea.offsetTop - 20, behavior: "smooth" });
+  showToast("Feedback rendered!");
+}
+
+function formatFeedbackText(text) {
+  let safe = escapeHtml(text);
+  // Convert markdown bold **text** to <strong>
+  safe = safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  // Convert markdown headers ### to <h4> and ## to <h3>
+  safe = safe.replace(/^### (.*$)/gim, "<h4>$1</h4>");
+  safe = safe.replace(/^## (.*$)/gim, "<h3>$1</h3>");
+  safe = safe.replace(/^# (.*$)/gim, "<h3>$1</h3>");
+  // Convert bullet points
+  safe = safe.replace(/^\s*[-*]\s+(.*$)/gim, "• $1");
+  return safe.replace(/\n/g, "<br>");
 }
 
 function startTimer() {
   if (timerInterval) {
     clearInterval(timerInterval);
   }
-  const minutes = parseInt(timerMinutesInput.value, 10) || 5;
+  const minutes = parseInt(timerMinutesInput.value, 10) || 10;
   timeLeft = minutes * 60;
   timerBar.classList.remove("hidden");
   timerBar.classList.remove("timer-warning");
@@ -454,49 +465,6 @@ function updateTimerDisplay() {
   const m = Math.floor(remaining / 60);
   const s = remaining % 60;
   timerBar.textContent = `⏱ Time Remaining: ${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
-
-function exportQuiz() {
-  let payload;
-  let filename = "quiz.json";
-
-  if (quizData && Array.isArray(quizData.questions)) {
-    payload = JSON.stringify(quizData, null, 2);
-    const title = (quizData.title || "quiz").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-    filename = `quiz-${title || "quiz"}.json`;
-  } else if (jsonInput.value.trim()) {
-    payload = jsonInput.value;
-  } else {
-    showToast("Nothing to export. Load or paste a quiz first.", "error");
-    return;
-  }
-
-  downloadFile(filename, payload);
-}
-
-function handleImportFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    jsonInput.value = ev.target.result;
-    showToast("Quiz file imported! Click Generate Quiz to render it.");
-  };
-  reader.readAsText(file);
-  event.target.value = "";
-}
-
-function downloadFile(filename, content) {
-  const blob = new Blob([content], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
 
 function resetApp() {
